@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-header rounded box-shadow">
+      <h1>{{ hcomplex.name }}</h1>
+    </div>
+
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'details' %} active {% endif %}"
+            href="{{ url_for('hcomplex_detail', id=hcomplex.id, nav="details") }}">
+              Detalles
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'houses' %} active {% endif %}"
+            href="{{ url_for('hcomplex_detail', id=hcomplex.id, nav="houses") }}">
+              Casas
+        </a>
+      </li>
+    </ul>
+
+    {% if dictionary["nav"] == "details" %}
+      <p class="text-center"><strong>Detalles de fraccionamiento</strong></p>
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th scope="row">Direccion</th>
+              <td>{{ hcomplex.address }}</td>
+            </tr>
+            <tr>
+            <tr>
+              <th scope="row">Ciudad</th>
+              <td>{{ hcomplex.city }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Estado</th>
+              <td>{{ hcomplex.state }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Pais</th>
+              <td>{{ hcomplex.country }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Codigo Postal</th>
+              <td>{{ hcomplex.zipcode }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    {% elif dictionary["nav"] == "houses" %}
+      <p class="text-center">
+        <strong>Casas del fraccionamiento</strong>
+        {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+        <a href="{{ url_for("house_new", id=hcomplex.id) }} ">
+          (Nueva)
+        </a>
+        {% endif %}
+      </p>
+
+      <div class="alert alert-primary">
+        <nav class="navbar navbar-expand-lg navbar-light">
+          <a class="navbar-brand" href="#"></a>
+          <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item dropdown active">
+                <a class="nav-link dropdown-toggle"
+                    href="#"
+                    id="navbarDropdown"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false">
+                  Filtrar tipo
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item"
+                      href="{{ url_for("hcomplex_detail", id=hcomplex.id, nav="houses") }}">
+                      Todos
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  {% for item in filter_list %}
+                    <a class="dropdown-item"
+                        href="{{ url_for("hcomplex_detail", id=hcomplex.id, nav="houses", filter=item.name) }}">
+                        {{ item.name }}
+                    </a>
+                  {% endfor %}
+                </div>
+              </li>
+            </ul>
+            {{ wtf.quick_form(form, form_type='inline') }}
+          </div>
+        </nav>
+      </div>
+
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table">
+          {% for house in pagination.items %}
+            <tr>
+
+             <th>
+
+              <div class="btn-group dropup">
+                <button type="button"
+                        class="btn btn-secondary dropdown-toggle"
+                        data-toggle="dropdown"
+                        aria-expanded="false">
+                 {{ house.name }} <small>({{ house.status.name }})</small>
+                </button>
+
+                <ul class="dropdown-menu ul-drp" role="menu">
+                  <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="{{ url_for("house_detail", id=house.id) }}"
+                          role="button">Ver detalles</a>
+                  </li>
+                  {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+                  <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="{{ url_for("house_edit", id=house.id) }}"
+                          role="button">Modificar</a>
+                  </li>
+                  <li class="li-drp">
+                    <a class="dropdown-item"
+                        href="#"
+                        data-toggle="modal"
+                        data-target="#myModal{{ house.id }}">Borrar</a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </div>
+
+              {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+              <div class="modal fade" id="myModal{{ house.id }}" tabindex="-1"
+                    role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title"
+                          id="modalLongTitle{{ house.id }}">Eliminar casa</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      Los cambios no podran ser recuperados
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                      <a class="btn btn-danger"
+                          href="{{ url_for("house_delete", id=house.id) }}"
+                          role="button">
+                          Borrar
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% endif %}
+
+             </th>
+
+             <td>
+               {{ house.address }} <small>(CUV: {{ house.cuv }})</small>
+             </td>
+
+              <td>
+               ${{ house.price }}
+             </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+    {% endif %}
+
+  {% if pagination %}
+    {{ macros.pagination_widget_dict(pagination, 'hcomplex_detail', dictionary) }}
+  {% endif %}
+
+{% endblock %}

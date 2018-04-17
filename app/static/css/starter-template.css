@@ -1,0 +1,42 @@
+html,
+body {
+  overflow-x: hidden; /* Prevent scroll on narrow devices */
+}
+
+body {
+  padding-top: 56px;
+}
+
+.text-white-50 { color: rgba(255, 255, 255); }
+
+.bg-header { background-color: #a6cbffff; }
+
+.bg-content { background-color: #edfeffff; }
+
+.border-bottom { border-bottom: 1px solid #e5e5e5; }
+
+.box-shadow { box-shadow: 0 .25rem .75rem rgba(220, 220, 220); }
+
+.lh-100 { line-height: 1; }
+.lh-125 { line-height: 1.25; }
+.lh-150 { line-height: 1.5; }
+
+ul.comment {
+  list-style-type: none;
+  padding: 0px;
+  margin: 16px 0px 0px 0px;
+  border-top: 1px solid #e0e0e0;
+}
+ul.comment li.comment {
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+ul.comment li.comment:hover {
+  background-color: #f0f0f0;
+}
+div.comment-date {
+  float: right;
+}
+div.comment-body {
+  margin: 16px 0px 0px 0px;
+}

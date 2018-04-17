@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-header rounded box-shadow">
+      <h1>{{ activity.account.name }}</h1>
+    </div>
+
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link"
+            href="{{ url_for('account', id=activity.account.id, nav="details") }}">
+              Detalles
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link"
+            href="{{ url_for('account', id=activity.account.id, nav="credit") }}">
+              Informacion extra
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link"
+            href="{{ url_for('account', id=activity.account.id, nav="comments") }}">
+              Comentarios
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link active"
+            href="{{ url_for('account', id=activity.account.id, nav="activities") }}">
+              Actividades
+        </a>
+      </li>
+      {% if activity.account.credit.name == "Infonavit" or
+            activity.account.credit.name == "Fovissste" or
+            activity.account.credit.name == "Bancario" %}
+        <li class="nav-item">
+          <a class="nav-link
+                    {% if dictionary['nav'] == 'documents' %} active {% endif %}"
+              href="{{ url_for('account', id=activity.account.id, nav="documents") }}">
+                Documentos
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+
+      <p class="text-center">
+        <strong>Actividades registradas</strong>
+      </p>
+
+      <table class="table">
+        <tbody>
+            <tr>
+              <td>
+
+                <div class="title-area">
+                  <div class="btn-group dropup">
+                    <button type="button"
+                            class="btn btn-secondary dropdown-toggle"
+                            data-toggle="dropdown"
+                            aria-expanded="false">
+                      {{ activity.title}}
+                      <small>({{ activity.type.name }})</small>
+                    </button>
+
+                    <ul class="dropdown-menu ul-drp" role="menu">
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            data-toggle="collapse"
+                            href="#c-{{ activity.id }}"
+                            role="button"
+                            aria-expanded="false"
+                            aria-controls="collapseExample">
+                            Detalles
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="{{ url_for("account_activity", id=activity.id, nav="comments") }} ">
+                            Comentarios
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="{{ url_for("account_activity", id=activity.id, nav="assign") }} ">
+                            Asignar
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="{{ url_for('account_activity_mod', id=activity.id) }}">
+                            Modificar
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="#"
+                            data-toggle="modal"
+                            data-target="#myModal{{ activity.id }}">Borrar</a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="modal fade" id="myModal{{ activity.id }}" tabindex="-1"
+                        role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title"
+                              id="modalLongTitle{{ activity.id }}">Eliminar actividad</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          Los cambios no podran ser recuperados
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button"
+                                  class="btn btn-secondary"
+                                  data-dismiss="modal">Cerrar</button>
+                          <a class="btn btn-danger"
+                              href="{{ url_for("delete_activity", id=activity.id) }}"
+                              role="button">
+                              Borrar
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  </br>
+
+                  <div class="card">
+                    <div class="card-body">
+                      {{ activity.body }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="table-area">
+                  <div class="collapse" id="c-{{ activity.id }}">
+                      <strong>
+                        Responsable: {{ activity.responsable.name }}
+                        <small>(
+                        {% if activity.completed %}
+                          Completada
+                        {% else %}
+                            Sin completar
+                        {% endif %}
+                        )
+                        </small>
+                      </strong>
+
+                      <table class="table table-striped">
+                        <tr>
+                            <td>Creada</td>
+                            <td>
+                                {{ activity.timestamp.strftime("%d/%m/%Y") }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Inicio</td>
+                            <td>
+                                {{ activity.start_date.strftime("%d/%m/%Y") }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Final</td>
+                            <td>
+                                {{ activity.end_date.strftime("%d/%m/%Y") }}
+                            </td>
+                        </tr>
+                      </table>
+                  </div>
+                </div>
+
+
+              </td>
+            </tr>
+
+        </tbody>
+      </table>
+
+      {% if dictionary['nav'] == "comments" %}
+      <p class="text-center"><strong>Comentarios</strong></p>
+      <p class="text-center">
+        {{ wtf.quick_form(comment_form, form_type="horizontal") }}
+      </p>
+
+      <ul class="comment">
+        {% for comment in pagination.items %}
+          <li class="comment">
+
+            <div class="comment-content">
+
+              <div class="comment-name">
+
+                <div class="btn-group dropup">
+                  <button type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-expanded="false">
+                    {{ comment.user.name }}
+                  </button>
+
+                  <ul class="dropdown-menu ul-drp" role="menu">
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modalCom{{ comment.id }}">Borrar</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="modal fade" id="modalCom{{ comment.id }}" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="modalLongTitle{{ comment.id }}">Eliminar comentario</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Los cambios no podran ser recuperados
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <a class="btn btn-danger"
+                            href="{{ url_for("delete_activity_comment", id=comment.id) }}"
+                            role="button">
+                            Borrar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="comment-date">
+                {{ comment.timestamp.strftime("%d/%m/%Y") }}
+              </div>
+              <div class="comment-body">
+                {{ comment.body }}
+              </div>
+
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% elif dictionary['nav'] == "assign" %}
+      <p class="text-center"><strong>Asignar actividad</strong></p>
+
+      <div class="alert alert-primary">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#"></a>
+        <button class="navbar-toggler"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#navbarSupportedContent"
+                  aria-controls="navbarSupportedContent"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          {{ wtf.quick_form(search_form, form_type='inline') }}
+        </div>
+      </nav>
+      </div>
+
+    <div class="align-items-center bg-content rounded box-shadow">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Usuario</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Teléfono</th>
+            <th scope="col">Correo</th>
+            <th scope="col">Tipo</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for user in pagination.items %}
+            <tr>
+              <td>
+
+                <div class="btn-group dropup">
+                  <button type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-expanded="false">
+                    {{ user.username }}
+                  </button>
+
+                  <ul class="dropdown-menu ul-drp" role="menu">
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modalAssing{{ user.id }}">Asignar</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="modal fade" id="modalAssing{{ user.id }}" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="modalLongTitle{{ user.id }}">Asignar "{{ user.username }}"</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        La actividad sera asignada a este usuario
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <a class="btn btn-danger"
+                            href="{{ url_for("account_activity_assign", id=activity.id, user_id=user.id) }}"
+                            role="button">
+                            Asignar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <td>{{ user.name }}</td>
+              <td>{{ user.phone }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role.name }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+
+    {% endif %}
+
+
+  {% if pagination %}
+    {{ macros.pagination_widget_dict(pagination, 'account_activity', dictionary) }}
+  {% endif %}
+
+{% endblock %}

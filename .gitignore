@@ -1,0 +1,6 @@
+/migrations
+/venv
+
+*.db
+*.pyc
+*.spw

@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-header rounded box-shadow">
+      <h1>Casa: {{ house.name }} <small> ({{ house.status.name }})</small></h1>
+    </div>
+
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'details' %} active {% endif %}"
+            href="{{ url_for('house_detail', id=house.id, nav="details") }}">
+              Detalles
+        </a>
+      </li>
+
+      {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'owner' %} active {% endif %}"
+            href="{{ url_for('house_detail', id=house.id, nav="owner") }}">
+              Asignar dueño
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'seller' %} active {% endif %}"
+            href="{{ url_for('house_detail', id=house.id, nav="seller") }}">
+              Asignar vendedor
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+
+    {% if dictionary['nav'] == "details" %}
+    <p class="text-center"><strong>Detalles de casa</strong></p>
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th scope="row">Fraccionamiento</th>
+              <td>
+                <a href="{{ url_for("hcomplex_detail", id=house.complex.id) }}">
+                  {{ house.complex.name }}
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Nombre</th>
+              <td>{{ house.address }}</td>
+            </tr>
+            <tr>
+            <tr>
+              <th scope="row">CUV</th>
+              <td>{{ house.cuv }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Precio</th>
+              <td>${{ house.price }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Dueño</th>
+              <td>
+                {% if house.account %}
+                  <a href="{{ url_for("account", id=house.account.id) }}">
+                    {{ house.account.name }}
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Vendedor</th>
+              <td>
+                {% if house.user %}
+                  <a href="{{ url_for("user", id=house.user.id) }}">
+                    {{ house.user.name }}
+                  </a>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    {% elif dictionary['nav'] == "owner" %}
+    <p class="text-center"><strong>Asignar dueño</strong></p>
+
+    <div class="alert alert-primary">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#"></a>
+        <button class="navbar-toggler"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#navbarSupportedContent"
+                  aria-controls="navbarSupportedContent"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          {{ wtf.quick_form(form, form_type='inline') }}
+        </div>
+      </nav>
+    </div>
+
+    <div class="align-items-center bg-content rounded box-shadow">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Teléfono</th>
+            <th scope="col">Correo</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Contacto</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for account in pagination.items %}
+            <tr>
+              <td>
+                <div class="btn-group dropup">
+                  <button type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-expanded="false">
+                    {{ account.name }}
+                  </button>
+
+                  <ul class="dropdown-menu ul-drp" role="menu">
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#myModal{{ account.id }}">Asignar</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="modal fade" id="myModal{{ account.id }}" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="modalLongTitle{{ account.id }}">Asignar "{{ account.name }}"</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        La casa sera asignada a este cliente
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <a class="btn btn-danger"
+                            href="{{ url_for("house_owner", id=house.id, owner_id=account.id)}}"
+                            role="button">
+                            Asignar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </td>
+
+              <td>{{ account.phone }}</td>
+              <td>{{ account.email }}</td>
+              <td>{{ account.type.name }}</td>
+              <td>{{ account.contact_type.name }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+
+    {% elif dictionary['nav'] == "seller" %}
+    <p class="text-center"><strong>Asignar vendedor</strong></p>
+
+    <div class="alert alert-primary">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#"></a>
+        <button class="navbar-toggler"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#navbarSupportedContent"
+                  aria-controls="navbarSupportedContent"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          {{ wtf.quick_form(form, form_type='inline') }}
+        </div>
+      </nav>
+    </div>
+
+    <div class="align-items-center bg-content rounded box-shadow">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Usuario</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Teléfono</th>
+            <th scope="col">Correo</th>
+            <th scope="col">Tipo</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for user in pagination.items %}
+            <tr>
+              <td>
+
+                <div class="btn-group dropup">
+                  <button type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-expanded="false">
+                    {{ user.username }}
+                  </button>
+
+                  <ul class="dropdown-menu ul-drp" role="menu">
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#myModal{{ user.id }}">Asignar</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="modal fade" id="myModal{{ user.id }}" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="modalLongTitle{{ user.id }}">Asignar "{{ user.username }}"</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        El vendedor de la casa sera asignado
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <a class="btn btn-danger"
+                            href="{{ url_for("house_seller", id=house.id, seller_id=user.id)}}"
+                            role="button">
+                            Asignar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </td>
+
+              <td>{{ user.name }}</td>
+              <td>{{ user.phone }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role.name }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+
+    {% endif %}
+
+  {% if pagination %}
+      {{ macros.pagination_widget_dict(pagination, 'house_detail', dictionary) }}
+  {% endif %}
+
+
+{% endblock %}

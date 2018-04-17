@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-header rounded box-shadow">
+      <h1>Cuentas registradas</h1>
+    </div>
+
+    <div class="alert alert-primary">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#"></a>
+        <button class="navbar-toggler"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#navbarSupportedContent"
+                  aria-controls="navbarSupportedContent"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link"
+                  href="{{ url_for("create_account") }}"
+                  role="button">
+                  Nueva cuenta
+              </a>
+            </li>
+            <li class="nav-item dropdown active">
+              <a class="nav-link dropdown-toggle"
+                  href="#"
+                  id="navbarDropdown"
+                  role="button"
+                  data-toggle="dropdown"
+                  aria-haspopup="true"
+                  aria-expanded="false">
+                Filtrar tipo
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item"
+                    href="{{ url_for("accounts") }}">
+                    Todos
+                </a>
+                <a class="dropdown-item"
+                    href="{{ url_for("accounts", filter="active") }}">
+                    Activos
+                </a>
+                <div class="dropdown-divider"></div>
+                {% for item in filter_list %}
+                  <a class="dropdown-item"
+                      href="{{ url_for("accounts", filter=item.name) }}">
+                      {{ item.name }}
+                  </a>
+                {% endfor %}
+              </div>
+            </li>
+          </ul>
+          {{ wtf.quick_form(form, form_type='inline') }}
+        </div>
+      </nav>
+    </div>
+
+    <div class="align-items-center bg-content rounded box-shadow">
+      <div class="table-responsive-lg">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Teléfono</th>
+            <th scope="col">Correo</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Credito</th>
+            <th scope="col">Asignado a</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for account in accounts %}
+            <tr>
+              <td>
+                <div class="btn-group dropup">
+                  <button type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-expanded="false">
+                    {{ account.name }}
+                  </button>
+
+                  <ul class="dropdown-menu ul-drp" role="menu">
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="{{ url_for("account", id=account.id) }}"
+                          role="button">Ver detalles</a>
+                    </li>
+                    {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
+                       current_user == account.user %}
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="{{ url_for("edit_account", id=account.id) }}"
+                          role="button">Modificar</a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#myModal{{ account.id }}">Borrar</a>
+                    </li>
+                    {% endif %}
+                  </ul>
+                </div>
+
+                {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+                <div class="modal fade" id="myModal{{ account.id }}" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="modalLongTitle{{ account.id }}">Eliminar "{{ account.name }}"</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Los cambios no podran ser recuperados
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <a class="btn btn-danger"
+                            href="{{ url_for("delete_account", id=account.id) }}"
+                            role="button">
+                            Borrar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+
+              </td>
+
+              <td>{{ account.phone }}</td>
+              <td>{{ account.email }}</td>
+              <td>{{ account.type.name }}</td>
+              <td>{{ account.credit.name }}</td>
+              <td>
+                <a href="{{ url_for('user', id=account.user.id) }}">
+                  {{ account.user.name }}
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    {% if pagination %}
+      {{ macros.pagination_widget_dict(pagination, 'accounts', dictionary) }}
+    {% endif %}
+
+{% endblock %}

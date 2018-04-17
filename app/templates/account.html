@@ -1,0 +1,1172 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+    {% if not dictionary['page_print'] %}
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-header rounded box-shadow">
+      <h1>{{ account.name }}</h1>
+    </div>
+
+    <ul class="nav nav-tabs">
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'details' %} active {% endif %}"
+            href="{{ url_for('account', id=account.id, nav="details") }}">
+              Detalles
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'credit' %} active {% endif %}"
+            href="{{ url_for('account', id=account.id, nav="credit") }}">
+              Informacion extra
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'comments' %} active {% endif %}"
+            href="{{ url_for('account', id=account.id, nav="comments") }}">
+              Comentarios
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'activities' %} active {% endif %}"
+            href="{{ url_for('account', id=account.id, nav="activities") }}">
+              Actividades
+        </a>
+      </li>
+      {% if account.credit.name == "Infonavit" or
+            account.credit.name == "Fovissste" or
+            account.credit.name == "Bancario" %}
+        <li class="nav-item">
+          <a class="nav-link
+                    {% if dictionary['nav'] == 'documents' %} active {% endif %}"
+              href="{{ url_for('account', id=account.id, nav="documents") }}">
+                Documentos
+          </a>
+        </li>
+      {% endif %}
+      {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'assign' %} active {% endif %}"
+            href="{{ url_for('account', id=account.id, nav="assign") }}">
+              Asignar
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+    {% endif %}
+
+    {% if dictionary["nav"] == "details" %}
+      <p class="text-center"><strong>Detalles de contacto</strong></p>
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table">
+          <tbody>
+            <tr>
+              <th scope="row">Nombre</th>
+              <td>{{ account.name }}</td>
+            </tr>
+            <tr>
+            <tr>
+              <th scope="row">Telefono</th>
+              <td>{{ account.phone }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Correo</th>
+              <td>{{ account.email }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tipo</th>
+              <td>{{ account.type.name }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Credito</th>
+              <td>{{ account.credit.name }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Contacto</th>
+              <td>{{ account.contact_type.name }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Creado</th>
+              <td>{{ account.created.strftime("%d/%m/%Y") }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Asignado a</th>
+              <td>{{ account.user.name }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-center">
+        <strong>Direcciones registradas</strong>
+        {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
+              current_user == account.user %}
+        <a href="{{ url_for("account_address", id=account.id) }}">(Nueva)</a>
+        {% endif %}
+      </p>
+
+      {% for address in account.addresses %}
+        <div class="align-items-center bg-content rounded box-shadow">
+          <table class="table">
+          <tbody>
+            <tr>
+              <th scope="row">
+
+                <div class="btn-group dropup">
+                  <button type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-expanded="false">
+                    Calle
+                  </button>
+
+                  {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
+                        current_user == account.user %}
+                  <ul class="dropdown-menu ul-drp" role="menu">
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="{{ url_for("edit_address", id=address.id) }}"
+                          role="button">Modificar</a>
+                    </li>
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#myModal{{ address.id }}">Borrar</a>
+                    </li>
+                  </ul>
+                  {% endif %}
+                </div>
+
+                <div class="modal fade" id="myModal{{ address.id }}" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="modalLongTitle{{ address.id }}">Eliminar dirección</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Los cambios no podran ser recuperados
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <a class="btn btn-danger"
+                            href="{{ url_for("delete_address", id=address.id) }}"
+                            role="button">
+                            Borrar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </th>
+              <td>{{ address.street }}</td>
+            </tr>
+            <tr>
+            <tr>
+              <th scope="row">Ciudad</th>
+              <td>{{ address.city }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Estado</th>
+              <td>{{ address.state }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Codigo postal</th>
+              <td>{{ address.code }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Pais</th>
+              <td>{{ address.country }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Teléfono</th>
+              <td>{{ address.phone }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Tipo</th>
+              <td>{{ address.type.name }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Descripción</th>
+              <td>{{ address.description }}</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      {% endfor %}
+
+      <p class="text-center"><strong>Casas registradas</strong></p>
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table">
+          {% for house in account.houses %}
+            <tr>
+               <td>
+                   <div class="title-area">
+                       <strong>
+                       <a href="{{ url_for('house_detail', id=house.id) }}">
+                           {{ house.name }}
+                       </a>
+                       ({{ house.status.name }})
+                       </strong>
+                       <small>
+                           <a href="{{ url_for('hcomplex_detail', id=house.complex.id) }}">
+                               {{ house.complex.name }}
+                           </a>
+                       </small>
+                   </div>
+               </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+    {% elif dictionary["nav"] == "credit" %}
+      <p class="text-center"><strong>Información extra de contacto</strong></p>
+      {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
+            current_user == account.user %}
+      <p class="text-center">
+        {{ wtf.quick_form(data_form, form_type="inline") }}
+      </p>
+      {% endif %}
+
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table">
+          {% for data in pagination.items %}
+            <tr>
+             <th>
+
+              <div class="btn-group dropup">
+                <button type="button"
+                        class="btn btn-secondary dropdown-toggle"
+                        data-toggle="dropdown"
+                        aria-expanded="false">
+                 {{ data.type.name }}
+                </button>
+
+                {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
+                      current_user == account.user %}
+                <ul class="dropdown-menu ul-drp" role="menu">
+                  <li class="li-drp">
+                    <a class="dropdown-item"
+                        href="#"
+                        data-toggle="modal"
+                        data-target="#myModal{{ data.id }}">Borrar</a>
+                  </li>
+                </ul>
+                {% endif %}
+              </div>
+
+              <div class="modal fade" id="myModal{{ data.id }}" tabindex="-1"
+                    role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title"
+                          id="modalLongTitle{{ data.id }}">Eliminar información</h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      Los cambios no podran ser recuperados
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                      <a class="btn btn-danger"
+                          href="{{ url_for("delete_data", id=data.id) }}"
+                          role="button">
+                          Borrar
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+             </th>
+             <td>
+               {{ data.info }}
+             </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+
+    {% elif dictionary["nav"] == "comments" %}
+      <p class="text-center"><strong>Comentarios</strong></p>
+      <p class="text-center">
+        {{ wtf.quick_form(comment_form, form_type="horizontal") }}
+      </p>
+
+      <ul class="comment">
+        {% for comment in pagination.items %}
+          <li class="comment">
+
+            <div class="comment-content">
+
+              <div class="comment-name">
+
+                <div class="btn-group dropup">
+                  <button type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-toggle="dropdown"
+                          aria-expanded="false">
+                    {{ comment.user.name }}
+                  </button>
+
+                  <ul class="dropdown-menu ul-drp" role="menu">
+                    <li class="li-drp">
+                      <a class="dropdown-item"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#myModal{{ comment.id }}">Borrar</a>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="modal fade" id="myModal{{ comment.id }}" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title"
+                            id="modalLongTitle{{ comment.id }}">Eliminar comentario</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        Los cambios no podran ser recuperados
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                        <a class="btn btn-danger"
+                            href="{{ url_for("delete_comment", id=comment.id) }}"
+                            role="button">
+                            Borrar
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="comment-date">
+                {{ comment.timestamp.strftime("%d/%m/%Y") }}
+              </div>
+              <div class="comment-body">
+                {{ comment.body }}
+              </div>
+
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+    {% elif dictionary["nav"] == "activities" %}
+      <p class="text-center">
+        <strong>Actividades registradas</strong>
+        {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
+              current_user == account.user %}
+        <a href="{{ url_for("account_activity_new", id=account.id) }}">
+          (Nueva)
+        </a>
+        {% endif %}
+      </p>
+
+      <table class="table">
+        <tbody>
+          {% for activity in pagination.items %}
+            <tr>
+              <td>
+
+                <div class="title-area">
+                  <div class="btn-group dropup">
+                    <button type="button"
+                            class="btn btn-secondary dropdown-toggle"
+                            data-toggle="dropdown"
+                            aria-expanded="false">
+                      {{ activity.title}}
+                      <small>({{ activity.type.name }})</small>
+                    </button>
+
+                    {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
+                          current_user == account.user %}
+                    <ul class="dropdown-menu ul-drp" role="menu">
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            data-toggle="collapse"
+                            href="#c-{{ activity.id }}"
+                            role="button"
+                            aria-expanded="false"
+                            aria-controls="collapseExample">
+                            Detalles
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="{{ url_for("account_activity", id=activity.id, nav="comments") }} ">
+                            Comentarios
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="{{ url_for("account_activity", id=activity.id, nav="assign") }} ">
+                            Asignar
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="{{ url_for('account_activity_mod', id=activity.id) }}">
+                            Modificar
+                        </a>
+                      </li>
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="#"
+                            data-toggle="modal"
+                            data-target="#myModal{{ activity.id }}">Borrar</a>
+                      </li>
+                    </ul>
+                    {% endif %}
+                  </div>
+
+                  <div class="modal fade" id="myModal{{ activity.id }}" tabindex="-1"
+                        role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title"
+                              id="modalLongTitle{{ activity.id }}">Eliminar actividad</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          Los cambios no podran ser recuperados
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button"
+                                  class="btn btn-secondary"
+                                  data-dismiss="modal">Cerrar</button>
+                          <a class="btn btn-danger"
+                              href="{{ url_for("delete_activity", id=activity.id) }}"
+                              role="button">
+                              Borrar
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  </br>
+
+                  <div class="card">
+                    <div class="card-body">
+                      {{ activity.body }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="table-area">
+                  <div class="collapse" id="c-{{ activity.id }}">
+                      <strong>
+                        Responsable: {{ activity.responsable.name }}
+                        <small>(
+                        {% if activity.completed %}
+                          Completada
+                        {% else %}
+                            Sin completar
+                        {% endif %}
+                        )
+                        (Creador: {{ activity.creator.name }})
+                        </small>
+                      </strong>
+
+                      <table class="table table-striped">
+                        <tr>
+                            <td>Creada</td>
+                            <td>
+                                {{ activity.timestamp.strftime("%d/%m/%Y") }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Inicio</td>
+                            <td>
+                                {{ activity.start_date.strftime("%d/%m/%Y") }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Final</td>
+                            <td>
+                                {{ activity.end_date.strftime("%d/%m/%Y") }}
+                            </td>
+                        </tr>
+                      </table>
+                  </div>
+                </div>
+
+
+              </td>
+            </tr>
+
+          {% endfor %}
+        </tbody>
+      </table>
+
+  {% elif dictionary["nav"] == "documents" %}
+    <p class="text-center">
+      <strong>
+        Expediente de credito {{ account.credit.name }}
+        {% if dictionary["page_print"] %}
+        ({{ account.name }})
+        {% endif %}
+
+        {% if not dictionary["page_print"] %}
+        <a href="{{ url_for('account', id=account.id, nav="documents", page_print=1) }}">
+              (Imprimir)
+        </a>
+        {% endif %}
+      </strong>
+    </p>
+
+
+    {% if account.credit.name == "Infonavit" %}
+    <p class="text-center"> <strong> Documentacion comprador </strong> </p>
+
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Documento</th>
+          <th scope="col" class="text-center">Titular</th>
+          <th scope="col" class="text-center">Conyuge</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">1</th>
+          <td>Formato de inscripcion</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Precalificacion Infonavit</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>Solicitud de inscripcion de credito</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+        <tr>
+          <th scope="row">4</th>
+          <td>Acta de nacimiento original</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">5</th>
+          <td>Copia de acta de nacimiento</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">6</th>
+          <td>Identificacion oficial (INE, Ced. profesional, pasaporte)</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">7</th>
+          <td>Consulta de identificacion vigente</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">8</th>
+          <td>Caratula de estado de cuenta del vendedor</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+        <tr>
+          <th scope="row">9</th>
+          <td>Avaluo del inmueble</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+        <tr>
+          <th scope="row">10</th>
+          <td>Constancia taller "SABER PARA DECIDIR"</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">11</th>
+          <td>CURP</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">12</th>
+          <td>Cedula de identificacion fiscal</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">13</th>
+          <td>Formato manifiesto</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">14</th>
+          <td>Formato "HOGAR A TU MEDIDA" (2 originales)</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">15</th>
+          <td>Formato SIC (Consulta de duro de credito)(4 originales 1 en blanco)</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">16</th>
+          <td>Comprobante de domicilio oficial (CFE)</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="text-center">
+      <strong>
+        Documentos si el titular esta casado por bienes mancomunados
+      </strong>
+    </p>
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <th scope="row">17</th>
+          <td>Acta de matrimonio original</td>
+        </tr>
+        <tr>
+          <th scope="row">18</th>
+          <td>Identificacion oficial conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">19</th>
+          <td>Consulta de identificacion vigente conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">20</th>
+          <td>Acta de nacimiento original</td>
+        </tr>
+        <tr>
+          <th scope="row">21</th>
+          <td>CURP conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">22</th>
+          <td>Cedula de identificacion fiscal conyuge</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-center">
+      <small>
+        NOTA IMPORTANTE: Tanto el RFC (con homoclave) y CURP deben de coincidir
+        con la cedula fistal y que esten homologados en el sistema de INFONAVIT
+      </small>
+    </p>
+
+    <p class="text-center">
+      <strong>
+        Documentacion vendedor
+      </strong>
+    </p>
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <th scope="row">23</th>
+          <td>Idenficacion oficial</td>
+        </tr>
+        <tr>
+          <th scope="row">24</th>
+          <td>Cedula fiscal</td>
+        </tr>
+        <tr>
+          <th scope="row">25</th>
+          <td>CURP</td>
+        </tr>
+        <tr>
+          <th scope="row">26</th>
+          <td>Acta de nacimiento</td>
+        </tr>
+        <tr>
+          <th scope="row">27</th>
+          <td>Comprobante de domicilio</td>
+        </tr>
+        <tr>
+          <th scope="row">28</th>
+          <td>Acta constitutiva y poder notarial de empresa</td>
+        </tr>
+        <tr>
+          <th scope="row">29</th>
+          <td>Cedula fiscal de empresa</td>
+        </tr>
+        <tr>
+          <th scope="row">30</th>
+          <td>Boleta y constancia de no adeudo predial</td>
+        </tr>
+        <tr>
+          <th scope="row">31</th>
+          <td>Boleta y constancia de no adeudo de agua</td>
+        </tr>
+        <tr>
+          <th scope="row">32</th>
+          <td>Escritura del inmueble y antecedentes</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% elif account.credit.name == "Fovissste" %}
+    <p class="text-center"> <strong> Documentacion comprador </strong> </p>
+
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Documento</th>
+          <th scope="col" class="text-center">Titular</th>
+          <th scope="col" class="text-center">Conyuge</th>
+        </tr>
+      </thead>
+      <tbody>
+          <th scope="row">1</th>
+          <td>Identificacion oficial (INE, Ced. profesional, pasaporte)</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Consulta de identificacion vigente</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>Ultimos dos talones de pago</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">4</th>
+          <td>Constancia de servicio o expediente unico</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">5</th>
+          <td>Estado de cuenta del SAR</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">6</th>
+          <td>CURP</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">7</th>
+          <td>Comprobante de domicilio oficial (CFE)</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+        <tr>
+          <th scope="row">8</th>
+          <td>Acta de nacimiento original</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">9</th>
+          <td>Cedula de identificacion fiscal</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">10</th>
+          <td>Constancia taller</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">11</th>
+          <td>Avaluo del inmueble</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="text-center">
+      <strong>
+        Documentos si el titular esta casado por bienes mancomunados
+      </strong>
+    </p>
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <th scope="row">12</th>
+          <td>Acta de matrimonio original</td>
+        </tr>
+        <tr>
+          <th scope="row">13</th>
+          <td>Identificacion oficial conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">14</th>
+          <td>Consulta de identificacion vigente conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">15</th>
+          <td>Acta de nacimiento original</td>
+        </tr>
+        <tr>
+          <th scope="row">16</th>
+          <td>CURP conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">17</th>
+          <td>Cedula de identificacion fiscal conyuge</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-center">
+      <small>
+        NOTA IMPORTANTE: Tanto el RFC (con homoclave) y CURP deben de coincidir
+        con la cedula fistal y que esten homologados en el sistema de FOVISSSTE
+      </small>
+    </p>
+
+    <p class="text-center">
+      <strong>
+        Documentacion vendedor
+      </strong>
+    </p>
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <th scope="row">18</th>
+          <td>Idenficacion oficial</td>
+        </tr>
+        <tr>
+          <th scope="row">19</th>
+          <td>Cedula fiscal</td>
+        </tr>
+        <tr>
+          <th scope="row">20</th>
+          <td>CURP</td>
+        </tr>
+        <tr>
+          <th scope="row">21</th>
+          <td>Acta de nacimiento</td>
+        </tr>
+        <tr>
+          <th scope="row">22</th>
+          <td>Comprobante de domicilio</td>
+        </tr>
+        <tr>
+          <th scope="row">23</th>
+          <td>Acta constitutiva y poder notarial de empresa</td>
+        </tr>
+        <tr>
+          <th scope="row">24</th>
+          <td>Cedula fiscal de empresa</td>
+        </tr>
+        <tr>
+          <th scope="row">25</th>
+          <td>Boleta y constancia de no adeudo predial</td>
+        </tr>
+        <tr>
+          <th scope="row">26</th>
+          <td>Boleta y constancia de no adeudo de agua</td>
+        </tr>
+        <tr>
+          <th scope="row">27</th>
+          <td>Escritura del inmueble y antecedentes</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% elif account.credit.name == "Bancario" %}
+    <p class="text-center"> <strong> Documentacion comprador </strong> </p>
+
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Documento</th>
+          <th scope="col" class="text-center">Titular</th>
+          <th scope="col" class="text-center">Conyuge</th>
+        </tr>
+      </thead>
+      <tbody>
+          <th scope="row">1</th>
+          <td>Identificacion oficial (INE, Ced. profesional, pasaporte)</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td>Consulta de identificacion vigente</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">3</th>
+          <td>Ultimos 6 talones de pago o estados de cuenta</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+        <tr>
+          <th scope="row">4</th>
+          <td>Cedula de identificacion oficial</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">5</th>
+          <td>CURP</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">6</th>
+          <td>Comprobante de domicilio oficial (CFE)</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+        <tr>
+          <th scope="row">7</th>
+          <td>Acta de nacimiento original</td>
+          <td class="text-center">X</td>
+          <td class="text-center">X</td>
+        </tr>
+        <tr>
+          <th scope="row">8</th>
+          <td>Avaluo del inmueble</td>
+          <td class="text-center">X</td>
+          <td class="text-center"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="text-center">
+      <strong>
+        Documentos si el titular esta casado por bienes mancomunados
+      </strong>
+    </p>
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <th scope="row">9</th>
+          <td>Acta de matrimonio original</td>
+        </tr>
+        <tr>
+          <th scope="row">10</th>
+          <td>Identificacion oficial conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">11</th>
+          <td>Consulta de identificacion vigente conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">12</th>
+          <td>Acta de nacimiento original</td>
+        </tr>
+        <tr>
+          <th scope="row">13</th>
+          <td>CURP conyuge</td>
+        </tr>
+        <tr>
+          <th scope="row">14</th>
+          <td>Cedula de identificacion fiscal conyuge</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-center">
+      <small>
+        NOTA IMPORTANTE: Tanto el RFC (con homoclave) y CURP deben de coincidir
+        con la cedula fistal
+      </small>
+    </p>
+
+    <p class="text-center">
+      <strong>
+        Documentacion vendedor
+      </strong>
+    </p>
+    <table class="table table-sm">
+      <tbody>
+        <tr>
+          <th scope="row">15</th>
+          <td>Idenficacion oficial</td>
+        </tr>
+        <tr>
+          <th scope="row">16</th>
+          <td>Cedula fiscal</td>
+        </tr>
+        <tr>
+          <th scope="row">17</th>
+          <td>CURP</td>
+        </tr>
+        <tr>
+          <th scope="row">18</th>
+          <td>Acta de nacimiento</td>
+        </tr>
+        <tr>
+          <th scope="row">19</th>
+          <td>Comprobante de domicilio</td>
+        </tr>
+        <tr>
+          <th scope="row">20</th>
+          <td>Acta constitutiva y poder notarial de empresa</td>
+        </tr>
+        <tr>
+          <th scope="row">21</th>
+          <td>Cedula fiscal de empresa</td>
+        </tr>
+        <tr>
+          <th scope="row">22</th>
+          <td>Boleta y constancia de no adeudo predial</td>
+        </tr>
+        <tr>
+          <th scope="row">23</th>
+          <td>Boleta y constancia de no adeudo de agua</td>
+        </tr>
+        <tr>
+          <th scope="row">24</th>
+          <td>Escritura del inmueble y antecedentes</td>
+        </tr>
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% elif dictionary["nav"] == "assign" %}
+      <p class="text-center"><strong>Asignar cuenta a usuario</strong></p>
+      <div class="alert alert-primary">
+        <nav class="navbar navbar-expand-lg navbar-light">
+          <a class="navbar-brand" href="#"></a>
+          <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            {{ wtf.quick_form(assign_form, form_type='inline') }}
+          </div>
+        </nav>
+      </div>
+
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th scope="col">Usuario</th>
+              <th scope="col">Nombre</th>
+              <th scope="col">Teléfono</th>
+              <th scope="col">Correo</th>
+              <th scope="col">Tipo</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for user in pagination.items %}
+              <tr>
+                <td>
+
+                  <div class="btn-group dropup">
+                    <button type="button"
+                            class="btn btn-secondary dropdown-toggle"
+                            data-toggle="dropdown"
+                            aria-expanded="false">
+                      {{ user.username }}
+                    </button>
+
+                    <ul class="dropdown-menu ul-drp" role="menu">
+                      <li class="li-drp">
+                        <a class="dropdown-item"
+                            href="#"
+                            data-toggle="modal"
+                            data-target="#assignModal{{ user.id }}">Asignar</a>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="modal fade" id="assignModal{{ user.id }}" tabindex="-1"
+                        role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title"
+                              id="modalLongTitle{{ user.id }}">Asignar cuenta a "{{ user.username }}"</h5>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                          El vendedor de la casa sera asignado
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                          <a class="btn btn-danger"
+                              href="{{ url_for('account_seller', id=account.id, seller_id=user.id) }}"
+                              role="button">
+                              Asignar
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </td>
+
+                <td>{{ user.name }}</td>
+                <td>{{ user.phone }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role.name }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+
+  {% endif %}
+
+  {% if pagination %}
+    {{ macros.pagination_widget_dict(pagination, 'account', dictionary) }}
+  {% endif %}
+
+{% endblock %}

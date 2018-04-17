@@ -1,0 +1,64 @@
+{% macro pagination_widget_dict(pagination, endpoint, dict={}) %}
+<nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center">
+      <li{% if not pagination.has_prev %} class="page-item disabled"{% endif %}>
+          <a class="page-link"
+              tabindex="-1"
+              href="{% if pagination.has_prev %}
+                      {{ url_for(endpoint, page = pagination.page - 1, **dict) }}
+                    {% else %}
+                      #
+                    {% endif %}">
+          &laquo;
+          </a>
+      </li>
+
+      {% for p in pagination.iter_pages() %}
+          {% if p %}
+              {% if p == pagination.page %}
+              <li class="page-item active">
+                  <a class="page-link"
+                    href="{{ url_for(endpoint, page=p, **dict) }}">
+                    {{ p }}
+                  </a>
+              </li>
+              {% else %}
+              <li class="page-item">
+                  <a class="page-link"
+                      href="{{ url_for(endpoint, page=p, **dict) }}">
+                    {{ p }}
+                  </a>
+              </li>
+              {% endif %}
+          {% else %}
+            <li class="page-item disabled">
+              <a href="#">&hellip;</a>
+            </li>
+          {% endif %}
+      {% endfor %}
+
+      <li{% if not pagination.has_next %} class="page-item disabled"{% endif %}>
+          <a class="page-link"
+              href="{% if pagination.has_next %}
+                    {{ url_for(endpoint, page = pagination.page + 1, **dict) }}
+                  {% else %}
+                    #
+                  {% endif %}">
+          &raquo;
+          </a>
+      </li>
+  </ul>
+</nav>
+{% endmacro %}
+
+{% macro alphabet_list(letter_list, endpoint, current_letter) %}
+<ul class="nav nav-tabs">
+    {% for letter in letter_list %}
+    <li {% if letter==current_letter %}class="active"{% endif %}>
+      <a href="{{ url_for(endpoint, letter=letter, page=1) }}">
+        {{ letter }}
+      </a>
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
