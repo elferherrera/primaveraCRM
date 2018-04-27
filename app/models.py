@@ -216,7 +216,7 @@ class Account_contact_type(db.Model):
     def insert_initial():
         types = [
             'Vivanuncio', 'Vendedor', 'Amigo',
-            'Folleto', 'Lona', 'Segunda mano']
+            'Folleto', 'Lona', 'Segunda mano', 'Pagina web']
 
         for type in types:
             new_type = Account_contact_type.query.filter_by(name=type).first()
@@ -377,7 +377,7 @@ class Account_data_type(db.Model):
     @staticmethod
     def insert_initial():
         types = ['NSS', 'RFC', 'Fecha de nacimiento',
-                 'Conyuge', 'Telefono extra']
+                 'Conyuge', 'Telefono extra', 'CURP']
 
         for type in types:
             new_type = Account_data_type.query.filter_by(name=type).first()
@@ -403,7 +403,8 @@ class Account_credit(db.Model):
 
     @staticmethod
     def insert_initial():
-        types = ['Infonavit', 'Fovissste', 'Bancario', 'Contado', 'Cancelado']
+        types = ['Infonavit', 'Fovissste', 'Bancario',
+            'Contado', 'Cancelado', 'Desconocido']
 
         for type in types:
             new_type = Account_credit.query.filter_by(name=type).first()

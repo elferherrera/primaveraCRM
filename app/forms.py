@@ -171,19 +171,19 @@ class CreateAddressForm(FlaskForm):
                 validators=[
                     DataRequired(),
                     Length(1, 64),
-                    Regexp('^[\w _.#]*$', message='Solo letras.')])
+                    Regexp('^[\w -_.#]*$', message='Solo letras.')])
 
     city = StringField(
                 'Ciudad',
                 validators=[
                     Length(1, 64),
-                    Regexp('^[\w _.#]*$', message='Solo letras.')])
+                    Regexp('^[\w -_.#]*$', message='Solo letras.')])
 
     state = StringField(
                 'Estado',
                 validators=[
                     Length(1, 64),
-                    Regexp('^[\w _.#]*$', message='Solo letras.')])
+                    Regexp('^[\w -_.#]*$', message='Solo letras.')])
 
     code = StringField(
                 'Codigo postal',
@@ -249,7 +249,7 @@ class CreateActivityForm(FlaskForm):
                 validators=[
                     DataRequired(),
                     Length(1, 60),
-                    Regexp('^[\w _.,]*$', message='Solo letras.')])
+                    Regexp('^[\w -_.,]*$', message='Solo letras.')])
 
     start_date = DateTimeField(
                 'Fecha de inicio',
@@ -264,7 +264,7 @@ class CreateActivityForm(FlaskForm):
     body = TextAreaField(
                 'Descripcion',
                 validators=[
-                    Regexp('^[\w _.,]*$', message='Solo letras.')])
+                    Regexp('^[\w -_.,]*$', message='Solo letras.')])
 
     submit = SubmitField('Salvar')
 
@@ -287,7 +287,7 @@ class CreateHcomplexForm(FlaskForm):
             'Nombre',
             validators=[
                 DataRequired(), Length(1, 64),
-                Regexp('^[\w _.]*$', message='Solo letras.')])
+                Regexp('^[\w -_.]*$', message='Solo letras.')])
 
     address = StringField(
             'Direccion',
@@ -327,7 +327,7 @@ class CreateHouseForm(FlaskForm):
             'Nombre',
             validators=[
                 DataRequired(), Length(1, 64),
-                Regexp('^[\w _.]*$', message='Solo letras.')])
+                Regexp('^[\w -_.]*$', message='Solo letras.')])
 
     address = StringField(
             'Direccion',

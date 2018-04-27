@@ -101,6 +101,11 @@ def user(id):
         flash("El usuario no existe")
         return redirect(url_for("index"))
 
+    if (not current_user.can(Permission.MODERATE_ACTIVITIES) and
+            user != current_user):
+        flash('Los permisos que tienes no te permiten ver este usuario')
+        return redirect(url_for('index'))
+
     nav = request.args.get('nav', 'details', type=str)
     page = request.args.get('page', 1, type=int)
 
@@ -510,18 +515,21 @@ def edit_account(id):
 
     return render_template(
             'data_mod.html',
-            title="Modificar: %s" % account.name,
+            title=account.name,
             form=form)
 
 
 @app.route('/delete/<int:id>')
 @login_required
-@admin_required
 def delete_account(id):
     account = Account.query.get(id)
     if account is None:
         flash('La cuenta no existe')
         return redirect(url_for('account.accounts'))
+
+    if not current_user.is_administrator():
+        flash('Solo administradores pueden borrar cuentas')
+        return redirect(url_for('accounts'))
 
     db.session.delete(account)
     db.session.commit()
@@ -537,6 +545,11 @@ def account(id):
 
     if account is None:
         flash('La cuenta no existe')
+        return redirect(url_for('accounts'))
+
+    if (not current_user.can(Permission.MODERATE_ACTIVITIES) and
+            account.user != current_user):
+        flash('No puedes ver una cuenta que no creaste')
         return redirect(url_for('accounts'))
 
     nav = request.args.get('nav', 'details', type=str)
@@ -646,6 +659,22 @@ def account_seller(id):
     return redirect(url_for('account', id=account.id))
 
 
+@app.route('/account_clear/<int:id>')
+@login_required
+def account_clear(id):
+    account = Account.query.get(id)
+
+    if account is None:
+        flash('La cuenta no existe')
+        return redirect(url_for('accounts'))
+
+    account.user = None
+    db.session.add(account)
+    db.session.commit()
+
+    return redirect(url_for('account', id=account.id))
+
+
 @app.route('/account_activity/<int:id>', methods=['GET', 'POST'])
 @login_required
 def account_activity(id):
@@ -653,6 +682,11 @@ def account_activity(id):
 
     if activity is None:
         flash('La actividad no existe')
+        return redirect(url_for('accounts'))
+
+    if (not current_user.can(Permission.MODERATE_ACTIVITIES) and
+            activity.account.user != current_user):
+        flash('No puedes ver una cuenta que no creaste')
         return redirect(url_for('accounts'))
 
     page = request.args.get('page', 1, type=int)
@@ -1100,7 +1134,7 @@ def hcomplex_edit(id):
 
     return render_template(
         'data_mod.html',
-        title="Modificar datos de %s" % hcomplex.name,
+        title=hcomplex.name,
         form=form)
 
 
@@ -1179,6 +1213,30 @@ def hcomplex_detail(id):
                 dictionary=dictionary)
 
 
+@app.route('/hcomplex_print/<int:id>')
+@login_required
+def hcomplex_print(id):
+    hcomplex = House_complex.query.get(id)
+
+    if hcomplex is None:
+        flash('El fraccionamiento no existe')
+        return redirect(url_for('hcomplexes'))
+
+    filter = request.args.get('filter', 'all', type=str)
+
+    query = hcomplex.houses.order_by(House.name.asc())
+
+    if filter != "all":
+        query = query.join(
+                    House_status).filter(
+                    House_status.name == filter)
+
+    return render_template(
+                'hcomplex_print.html',
+                hcomplex=hcomplex,
+                query=query)
+
+
 @app.route('/house_new/<int:id>', methods=['GET', 'POST'])
 @login_required
 @permission_required(Permission.MODERATE_ACTIVITIES)
@@ -1253,7 +1311,7 @@ def house_edit(id):
 
     return render_template(
         'data_mod.html',
-        title="Editar casa de %s" % house.complex.name,
+        title=house.complex.name,
         form=form)
 
 
@@ -1382,6 +1440,32 @@ def house_seller(id):
         return redirect(url_for('house_detail', id=house.id))
 
     house.user = seller
+    db.session.add(house)
+    db.session.commit()
+
+    return redirect(url_for('house_detail', id=house.id))
+
+
+@app.route('/house_clear/<int:id>')
+@login_required
+def house_clear(id):
+    house = House.query.get(id)
+
+    if house is None:
+        flash('La casa no existe')
+        return redirect(url_for('hcomplexes'))
+
+    clear_type = request.args.get('clear_type', 'None', type=str)
+
+    if clear_type is None:
+        flash('No se selecciono tipo de borrado ')
+        return redirect(url_for('house_detail', id=house.id))
+
+    if clear_type == "owner":
+        house.account = None
+    elif clear_type == "user":
+        house.user = None
+
     db.session.add(house)
     db.session.commit()
 

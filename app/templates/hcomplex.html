@@ -57,7 +57,7 @@
     {% elif dictionary["nav"] == "houses" %}
       <p class="text-center">
         <strong>Casas del fraccionamiento</strong>
-        {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+        {% if current_user.is_administrator() %}
         <a href="{{ url_for("house_new", id=hcomplex.id) }} ">
           (Nueva)
         </a>
@@ -103,13 +103,40 @@
                   {% endfor %}
                 </div>
               </li>
+
+              <li class="nav-item dropdown active">
+                <a class="nav-link dropdown-toggle"
+                    href="#"
+                    id="navbarDropdown"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false">
+                  Imprimir
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item"
+                      href="{{ url_for("hcomplex_print", id=hcomplex.id, filter="all") }}">
+                      Todas
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  {% for item in filter_list %}
+                    <a class="dropdown-item"
+                        href="{{ url_for("hcomplex_print", id=hcomplex.id, filter=item.name) }}">
+                        {{ item.name }}
+                    </a>
+                  {% endfor %}
+                </div>
+              </li>
             </ul>
+
             {{ wtf.quick_form(form, form_type='inline') }}
           </div>
         </nav>
       </div>
 
       <div class="align-items-center bg-content rounded box-shadow">
+        <div class="table-responsive-lg">
         <table class="table">
           {% for house in pagination.items %}
             <tr>
@@ -136,6 +163,8 @@
                           href="{{ url_for("house_edit", id=house.id) }}"
                           role="button">Modificar</a>
                   </li>
+                  {% endif %}
+                  {% if current_user.is_administrator() %}
                   <li class="li-drp">
                     <a class="dropdown-item"
                         href="#"
@@ -181,11 +210,12 @@
              </td>
 
               <td>
-               ${{ house.price }}
+              ${{ "{:,}".format(house.price) }}
              </td>
             </tr>
           {% endfor %}
         </table>
+        </div>
       </div>
 
     {% endif %}

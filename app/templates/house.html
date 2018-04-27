@@ -4,7 +4,7 @@
 
 {% block content %}
     <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-header rounded box-shadow">
-      <h1>Casa: {{ house.name }} <small> ({{ house.status.name }})</small></h1>
+      <h1>{{ house.name }}</h1>
     </div>
 
     <ul class="nav nav-tabs">
@@ -48,7 +48,7 @@
               </td>
             </tr>
             <tr>
-              <th scope="row">Nombre</th>
+              <th scope="row">Direccion</th>
               <td>{{ house.address }}</td>
             </tr>
             <tr>
@@ -58,7 +58,11 @@
             </tr>
             <tr>
               <th scope="row">Precio</th>
-              <td>${{ house.price }}</td>
+              <td>${{ "{:,}".format(house.price) }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Estado</th>
+              <td>{{ house.status.name }}</td>
             </tr>
             <tr>
               <th scope="row">Dueño</th>
@@ -83,6 +87,8 @@
           </tbody>
         </table>
       </div>
+
+
     {% elif dictionary['nav'] == "owner" %}
     <p class="text-center"><strong>Asignar dueño</strong></p>
 
@@ -100,10 +106,50 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link"
+                  href="#"
+                  role="button"
+                  data-toggle="modal"
+                  data-target="#ownerclearModal">
+                  Borrar dueño
+              </a>
+            </li>
+          </ul>
+
           {{ wtf.quick_form(form, form_type='inline') }}
         </div>
       </nav>
     </div>
+
+
+    <div class="modal fade" id="ownerclearModal" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"
+                id="modalLongTitle">Borrar cliente asignado</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            El dueño registrado de la casa {% if house.account %}{{ house.account.name }}{% endif %} sera borrado
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <a class="btn btn-danger"
+                href="{{ url_for('house_clear', id=house.id, clear_type='user') }}"
+                role="button">
+                Borrar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <div class="align-items-center bg-content rounded box-shadow">
       <table class="table table-striped">
@@ -134,12 +180,12 @@
                       <a class="dropdown-item"
                           href="#"
                           data-toggle="modal"
-                          data-target="#myModal{{ account.id }}">Asignar</a>
+                          data-target="#ownerModal{{ account.id }}">Asignar</a>
                     </li>
                   </ul>
                 </div>
 
-                <div class="modal fade" id="myModal{{ account.id }}" tabindex="-1"
+                <div class="modal fade" id="ownerModal{{ account.id }}" tabindex="-1"
                       role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content">
@@ -195,10 +241,49 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link"
+                  href=""
+                  role="button"
+                  data-toggle="modal"
+                  data-target="#userclearModal">
+                  Borrar vendedor
+              </a>
+            </li>
+          </ul>
           {{ wtf.quick_form(form, form_type='inline') }}
         </div>
       </nav>
     </div>
+
+
+    <div class="modal fade" id="userclearModal" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"
+                id="modalLongTitle">Borrar cliente asignado</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            El vendedor registrado de la casa {% if house.user %}{{ house.user.name }}{% endif %} sera borrado
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <a class="btn btn-danger"
+                href="{{ url_for('house_clear', id=house.id, clear_type='user') }}"
+                role="button">
+                Borrar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <div class="align-items-center bg-content rounded box-shadow">
       <table class="table table-striped">
@@ -230,12 +315,12 @@
                       <a class="dropdown-item"
                           href="#"
                           data-toggle="modal"
-                          data-target="#myModal{{ user.id }}">Asignar</a>
+                          data-target="#userModal{{ user.id }}">Asignar</a>
                     </li>
                   </ul>
                 </div>
 
-                <div class="modal fade" id="myModal{{ user.id }}" tabindex="-1"
+                <div class="modal fade" id="userModal{{ user.id }}" tabindex="-1"
                       role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered" role="document">
                     <div class="modal-content">

@@ -96,7 +96,13 @@
             </tr>
             <tr>
               <th scope="row">Asignado a</th>
-              <td>{{ account.user.name }}</td>
+              <td>
+                  {% if account.user %}
+                      <a href="{{ url_for('user', id=account.user.id) }}">
+                        {{ account.user.name }}
+                      </a>
+                  {% endif %}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -1070,24 +1076,63 @@
 
     {% elif dictionary["nav"] == "assign" %}
       <p class="text-center"><strong>Asignar cuenta a usuario</strong></p>
-      <div class="alert alert-primary">
-        <nav class="navbar navbar-expand-lg navbar-light">
-          <a class="navbar-brand" href="#"></a>
-          <button class="navbar-toggler"
-                    type="button"
-                    data-toggle="collapse"
-                    data-target="#navbarSupportedContent"
-                    aria-controls="navbarSupportedContent"
-                    aria-expanded="false"
-                    aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
 
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            {{ wtf.quick_form(assign_form, form_type='inline') }}
+    <div class="alert alert-primary">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#"></a>
+        <button class="navbar-toggler"
+                  type="button"
+                  data-toggle="collapse"
+                  data-target="#navbarSupportedContent"
+                  aria-controls="navbarSupportedContent"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link"
+                  href=""
+                  role="button"
+                  data-toggle="modal"
+                  data-target="#userclearModal">
+                  Borrar vendedor
+              </a>
+            </li>
+          </ul>
+          {{ wtf.quick_form(assign_form, form_type='inline') }}
+        </div>
+      </nav>
+    </div>
+
+    <div class="modal fade" id="userclearModal" tabindex="-1"
+                      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"
+                id="modalLongTitle">Borrar cliente asignado</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-        </nav>
+          <div class="modal-body">
+            El vendedor registrado a la cuenta {% if account.user %}{{ account.user.name }}{% endif %} sera borrado
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            <a class="btn btn-danger"
+                href="{{ url_for('account_clear', id=account.id) }}"
+                role="button">
+                Borrar
+            </a>
+          </div>
+        </div>
       </div>
+    </div>
+
 
       <div class="align-items-center bg-content rounded box-shadow">
         <table class="table table-striped">
