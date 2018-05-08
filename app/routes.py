@@ -1,5 +1,6 @@
 import string
 import secrets
+import datetime
 from flask import (render_template, flash,
                    redirect, url_for, request)
 from flask_login import (current_user, login_user,
@@ -14,7 +15,7 @@ from app.forms import (LoginForm, UserForm, UserAdminForm,
                        CreateAddressForm, CreateDataForm,
                        CreateCommentForm, CreateActivityForm,
                        CreateHcomplexForm, CreateHouseForm,
-                       CreateNewOptionForm)
+                       CreateNewOptionForm, CreateSurveyForm)
 
 from app.models import (User, Role, Permission,
                         Account, Account_type, Account_contact_type,
@@ -22,7 +23,7 @@ from app.models import (User, Role, Permission,
                         Account_data, Account_data_type, Account_comment,
                         Account_activity, Account_activity_type,
                         Account_activity_comment, House_complex,
-                        Account_credit, House, House_status)
+                        Account_credit, Account_survey, House, House_status)
 
 
 options_list = {
@@ -45,9 +46,25 @@ def include_permission_class():
 @login_required
 def index():
     page = request.args.get('page', 1, type=int)
+    filter = request.args.get('filter', 'all', type=str)
 
     query = current_user.accounts_activities_assigned.order_by(
-                        Account_activity.timestamp.asc())
+                        Account_activity.start_date.asc())
+
+    if filter == 'today':
+        today = datetime.date.today()
+        tomorrow = today + datetime.timedelta(days=1)
+
+        query = query.filter(
+            Account_activity.start_date > today).filter(
+            Account_activity.start_date < tomorrow).order_by(
+                Account_activity.start_date.asc())
+
+    elif filter == 'old':
+        today = datetime.date.today()
+        query = query.filter(
+            Account_activity.start_date < today).order_by(
+                Account_activity.start_date.asc())
 
     pagination = query.paginate(
                     page,
@@ -108,21 +125,46 @@ def user(id):
 
     nav = request.args.get('nav', 'details', type=str)
     page = request.args.get('page', 1, type=int)
+    filter = request.args.get('filter', 'all', type=str)
 
     dictionary = {
         'id': id,
-        'nav': nav}
+        'nav': nav,
+        'filter':filter}
 
-    pagination = []
+    query = []
 
     if nav == "activities":
         query = user.accounts_activities_assigned.order_by(
-                            Account_activity.timestamp.asc())
+                            Account_activity.start_date.asc())
 
+        if filter == 'today':
+            today = datetime.date.today()
+            tomorrow = today + datetime.timedelta(days=1)
+
+            query = query.filter(
+                Account_activity.start_date > today).filter(
+                Account_activity.start_date < tomorrow).order_by(
+                    Account_activity.start_date.asc())
+
+        elif filter == 'old':
+            today = datetime.date.today()
+            query = query.filter(
+                Account_activity.start_date < today).order_by(
+                    Account_activity.start_date.asc())
+
+    elif nav == "clients":
+        query = user.accounts.order_by(Account.name.asc())
+
+    elif nav == "houses":
+        query = user.sold_houses
+
+    pagination = []
+    if not isinstance(query, list):
         pagination = query.paginate(
-                        page,
-                        per_page=app.config['PRIMAVERA_POSTS_PER_PAGE'],
-                        error_out=False)
+                            page,
+                            per_page=app.config['PRIMAVERA_POSTS_PER_PAGE'],
+                            error_out=False)
 
     return render_template(
             'user.html',
@@ -142,11 +184,11 @@ def modify_user(id):
 
     form = UserForm(user)
     if form.validate_on_submit():
-        user.name = form.name.data
-        user.username = form.username.data
-        user.email = form.email.data
+        user.name = form.name.data.title()
+        user.username = form.username.data.lower()
+        user.email = form.email.data.lower()
         user.phone = form.phone.data
-        user.location = form.location.data
+        user.location = form.location.data.title()
 
         if form.change_pw.data is True:
             user.password = form.password.data
@@ -231,9 +273,9 @@ def modify_admin(id):
 
     form = UserAdminForm(user)
     if form.validate_on_submit():
-        user.name = form.name.data
-        user.username = form.username.data
-        user.email = form.email.data
+        user.name = form.name.data.title()
+        user.username = form.username.data.lower()
+        user.email = form.email.data.lower()
         user.phone = form.phone.data
         user.location = form.location.data
         user.role = Role.query.get(form.role.data)
@@ -263,9 +305,9 @@ def new_admin():
     if form.validate_on_submit():
         user = User()
 
-        user.name = form.name.data
-        user.username = form.username.data
-        user.email = form.email.data
+        user.name = form.name.data.title()
+        user.username = form.username.data.lower()
+        user.email = form.email.data.lower()
         user.phone = form.phone.data
         user.location = form.location.data
         user.password = form.password.data
@@ -347,7 +389,7 @@ def options():
             if option is None:
                 return redirect(url_for('options'))
 
-        option.name = form.parameter.data
+        option.name = form.parameter.data.title()
 
         db.session.add(option)
         db.session.commit()
@@ -450,10 +492,27 @@ def create_account():
     form = CreateAccountForm()
 
     if form.validate_on_submit():
+
+        query = Account.query.filter(
+                    Account.name.like(
+                        '%' + form.name.data + '%')).first()
+
+        if query:
+            flash("No se puede guardar esta cuenta. Parece que existe un usuario con este nombre")
+            return redirect(url_for('accounts'))
+
+        query = Account.query.filter(
+                    Account.phone.like(
+                        '%' + form.phone.data + '%')).first()
+
+        if query:
+            flash("No se puede guardar esta cuenta. Existe una cuenta con este telefono")
+            return redirect(url_for('accounts'))
+
         new_account = Account()
-        new_account.name = form.name.data
-        new_account.email = form.email.data
-        new_account.phone = form.phone.data
+        new_account.name = form.name.data.strip().title()
+        new_account.email = form.email.data.strip().lower()
+        new_account.phone = form.phone.data.strip()
         new_account.type = Account_type.query.get(form.account_type.data)
         new_account.contact_type = Account_contact_type.query.get(
                                         form.contact_type.data)
@@ -467,7 +526,7 @@ def create_account():
 
         return redirect(url_for('accounts'))
 
-    form.phone.data = "(xxx) xxx xxxx"
+    form.phone.data = "1111111111"
     form.email.data = "x@x.com"
 
     return render_template(
@@ -492,9 +551,9 @@ def edit_account(id):
     form = CreateAccountForm()
 
     if form.validate_on_submit():
-        account.name = form.name.data
-        account.email = form.email.data
-        account.phone = form.phone.data
+        account.name = form.name.data.strip().title()
+        account.email = form.email.data.strip().lower()
+        account.phone = form.phone.data.strip()
         account.type = Account_type.query.get(form.account_type.data)
         account.contact_type = Account_contact_type.query.get(
                                     form.contact_type.data)
@@ -790,11 +849,11 @@ def account_address(id):
     if form.validate_on_submit():
         new_address = Account_address()
 
-        new_address.street = form.street.data
-        new_address.city = form.city.data
-        new_address.state = form.state.data
+        new_address.street = form.street.data.title()
+        new_address.city = form.city.data.title()
+        new_address.state = form.state.data.title()
         new_address.code = form.code.data
-        new_address.country = form.country.data
+        new_address.country = form.country.data.title()
         new_address.phone = form.phone.data
         new_address.description = form.description.data
 
@@ -833,11 +892,11 @@ def edit_address(id):
     form = CreateAddressForm()
 
     if form.validate_on_submit():
-        address.street = form.street.data
-        address.city = form.city.data
-        address.state = form.state.data
+        address.street = form.street.data.title()
+        address.city = form.city.data.title()
+        address.state = form.state.data.title()
         address.code = form.code.data
-        address.country = form.country.data
+        address.country = form.country.data.title()
         address.phone = form.phone.data
         address.description = form.description.data
 
@@ -1031,6 +1090,139 @@ def delete_activity_comment(id):
     return redirect(url_for('account_activity', id=activity_id))
 
 
+@app.route('/account_survey/<int:id>', methods=['GET', 'POST'])
+@login_required
+def account_survey(id):
+    account = Account.query.get(id)
+
+    if account is None:
+        flash('La cuenta no existe')
+        return redirect(url_for('accounts'))
+
+    form = CreateSurveyForm()
+
+    if form.validate_on_submit():
+
+        if account.survey.first():
+            flash('La cuenta ya tiene una encuesta guardada')
+            return redirect(url_for('account', id=account.id, nav='survey'))
+
+        new_survey = Account_survey()
+
+        new_survey.age = form.age.data
+        new_survey.status = form.status.data
+        new_survey.children = form.children.data
+        new_survey.location = form.location.data
+        new_survey.info_work = form.info_work.data
+        new_survey.info_ad = form.info_ad.data
+        new_survey.info_purchase = form.info_purchase.data
+        new_survey.info_price = form.info_price.data
+        new_survey.info_house = form.info_house.data
+        new_survey.info_houses = form.info_houses.data
+        new_survey.comments = form.comments.data
+
+        new_survey.account = account
+
+        new_survey.complex = House_complex.query.get(form.house_complex.data)
+
+        db.session.add(new_survey)
+        db.session.commit()
+
+        return redirect(url_for('account', id=account.id, nav='survey'))
+
+    return render_template(
+        'data_mod.html',
+        title="Cuestionario %s" % account.name,
+        form=form)
+
+
+@app.route('/account_survey_edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def account_survey_edit(id):
+    account_survey = Account_survey.query.get(id)
+
+    if account_survey is None:
+        flash('La encuesta no existe')
+        return redirect(url_for('accounts'))
+
+    form = CreateSurveyForm()
+
+    if form.validate_on_submit():
+        account_survey.age = form.age.data
+        account_survey.status = form.status.data
+        account_survey.children = form.children.data
+        account_survey.location = form.location.data
+        account_survey.info_work = form.info_work.data
+        account_survey.info_ad = form.info_ad.data
+        account_survey.info_purchase = form.info_purchase.data
+        account_survey.info_price = form.info_price.data
+        account_survey.info_house = form.info_house.data
+        account_survey.info_houses = form.info_houses.data
+        account_survey.comments = form.comments.data
+
+        account_survey.complex = House_complex.query.get(form.house_complex.data)
+
+        db.session.add(account_survey)
+        db.session.commit()
+
+        return redirect(url_for('account', id=account_survey.account.id, nav='survey'))
+
+    form.house_complex.data = account_survey.complex.id
+    form.age.data = account_survey.age
+    form.status.data = account_survey.status
+    form.children.data = account_survey.children
+    form.location.data = account_survey.location
+    form.info_work.data = account_survey.info_work
+    form.info_ad.data = account_survey.info_ad
+    form.info_purchase.data = account_survey.info_purchase
+    form.info_price.data = account_survey.info_price
+    form.info_house.data = account_survey.info_house
+    form.info_houses.data = account_survey.info_houses
+    form.comments.data = account_survey.comments
+
+    return render_template(
+        'data_mod.html',
+        title="Cuestionario %s" % account_survey.account.name,
+        form=form)
+
+
+@app.route('/account_survey_delete/<int:id>')
+@login_required
+def account_survey_delete(id):
+    account_survey = Account_survey.query.get(id)
+    if account_survey is None:
+        flash('La encuesta no existe')
+        return redirect(url_for('account.accounts'))
+
+    if not current_user.can(Permission.MODERATE_ACTIVITIES):
+        flash('Solo moderadores pueden borrar encuestas')
+        return redirect(url_for('accounts'))
+
+    account_id = account_survey.account.id
+    db.session.delete(account_survey)
+    db.session.commit()
+    flash('La encuesta ha sido eliminada')
+
+    return redirect(url_for('account', id=account_id))
+
+
+@app.route('/account_surveys')
+@login_required
+def account_surveys():
+    page = request.args.get('page', 1, type=int)
+
+    query = Account_survey.query.join(Account).order_by(Account.name.asc())
+
+    pagination = query.paginate(
+                    page,
+                    per_page=app.config['PRIMAVERA_POSTS_PER_PAGE'],
+                    error_out=False)
+
+    return render_template(
+            'surveys.html',
+            pagination=pagination)
+
+
 # House complex and houses details
 @app.route('/hcomplexes', methods=['GET', 'POST'])
 @login_required
@@ -1077,11 +1269,11 @@ def hcomplex_new():
     if form.validate_on_submit():
         hcomplex = House_complex()
 
-        hcomplex.name = form.name.data
+        hcomplex.name = form.name.data.title()
         hcomplex.address = form.address.data
-        hcomplex.city = form.city.data
-        hcomplex.state = form.state.data
-        hcomplex.country = form.country.data
+        hcomplex.city = form.city.data.title()
+        hcomplex.state = form.state.data.title()
+        hcomplex.country = form.country.data.title()
         hcomplex.zipcode = form.zipcode.data
 
         db.session.add(hcomplex)
@@ -1114,11 +1306,11 @@ def hcomplex_edit(id):
     form = CreateHcomplexForm()
 
     if form.validate_on_submit():
-        hcomplex.name = form.name.data
+        hcomplex.name = form.name.data.title()
         hcomplex.address = form.address.data
-        hcomplex.city = form.city.data
-        hcomplex.state = form.state.data
-        hcomplex.country = form.country.data
+        hcomplex.city = form.city.data.title()
+        hcomplex.state = form.state.data.title()
+        hcomplex.country = form.country.data.title()
         hcomplex.zipcode = form.zipcode.data
 
         db.session.add(hcomplex)
@@ -1252,7 +1444,7 @@ def house_new(id):
     if form.validate_on_submit():
         house = House()
 
-        house.name = form.name.data
+        house.name = form.name.data.title()
         house.address = form.address.data
         house.cuv = form.cuv.data
         house.price = form.price.data
@@ -1290,7 +1482,7 @@ def house_edit(id):
     form = CreateHouseForm()
 
     if form.validate_on_submit():
-        house.name = form.name.data
+        house.name = form.name.data.title()
         house.address = form.address.data
         house.cuv = form.cuv.data
         house.price = form.price.data
@@ -1416,7 +1608,22 @@ def house_owner(id):
         flash('El comprador no existe')
         return redirect(url_for('house_detail', id=house.id))
 
+    new_status = House_status.query.filter_by(name='Apartada').first()
+
+    if new_status:
+        house.status = new_status
+
+    new_type = Account_type.query.filter_by(name='Cliente').first()
+    if new_type:
+        owner.type = new_type
+
     house.account = owner
+
+    # In case the owner has a user asigned
+    # the user will be assigned to the house
+    if owner.user:
+        house.user = owner.user
+
     db.session.add(house)
     db.session.commit()
 
@@ -1462,6 +1669,15 @@ def house_clear(id):
         return redirect(url_for('house_detail', id=house.id))
 
     if clear_type == "owner":
+
+        new_status = House_status.query.filter_by(name='En venta').first()
+        if new_status:
+            house.status = new_status
+
+        new_type = Account_type.query.filter_by(name='Contacto').first()
+        if new_type:
+            house.account.type = new_type
+
         house.account = None
     elif clear_type == "user":
         house.user = None

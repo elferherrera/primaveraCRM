@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-header rounded box-shadow">
+      <h1>Encuestas realizadas</h1>
+    </div>
+
+    <div class="table-responsive-lg">
+    <table class="table table-hover table-sm">
+    <thead>
+        <tr>
+          <th scope="col">Cliente</th>
+          <th scope="col">Fraccionamiento</th>
+          <th scope="col">Edad</th>
+          <th scope="col">Procedencia</th>
+          <th scope="col">Realizo</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for survey in pagination.items %}
+    <tr>
+       <td>
+            {% if survey.account %}
+                <a href="{{ url_for('account', id=survey.account.id, nav='survey') }}">
+                    {{ survey.account.name }}
+                </a>
+            {% endif %}
+        </td>
+        <td>
+            {% if survey.complex %}
+                <a href="{{ url_for('hcomplex_detail', id=survey.complex.id) }}">
+                    {{ survey.complex.name }}
+                </a>
+            {% endif %}
+        </td>
+        <td>{{ survey.age }}</td>
+        <td>{{ survey.location }}</td>
+        <td>
+            {% if survey.account.user %}
+                <a href="{{ url_for('user', id=survey.account.user.id) }}">
+                    {{ survey.account.user.name }}
+                </a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+    </div>
+
+{% if pagination %}
+  {{ macros.pagination_widget_dict(pagination, 'account_surveys') }}
+{% endif %}
+
+{% endblock %}

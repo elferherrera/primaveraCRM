@@ -29,7 +29,7 @@
       <li class="nav-item">
         <a class="nav-link active"
             href="{{ url_for('account', id=activity.account.id, nav="activities") }}">
-              Actividades
+              Seguimiento
         </a>
       </li>
       {% if activity.account.credit.name == "Infonavit" or
@@ -61,7 +61,10 @@
                             data-toggle="dropdown"
                             aria-expanded="false">
                       {{ activity.title}}
-                      <small>({{ activity.type.name }})</small>
+                      <small>
+                          ({{ activity.type.name }})
+                          ({{ activity.start_date.strftime("%d/%m/%Y") }})
+                      </small>
                     </button>
 
                     <ul class="dropdown-menu ul-drp" role="menu">

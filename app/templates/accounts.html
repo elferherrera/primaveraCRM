@@ -63,6 +63,10 @@
       </nav>
     </div>
 
+    {% if pagination %}
+      {{ macros.pagination_widget_dict(pagination, 'accounts', dictionary) }}
+    {% endif %}
+
     <div class="align-items-center bg-content rounded box-shadow">
       <div class="table-responsive-lg">
       <table class="table table-striped">

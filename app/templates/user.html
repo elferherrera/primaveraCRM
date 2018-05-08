@@ -18,7 +18,7 @@
         <a class="nav-link
                   {% if dictionary['nav'] == 'activities' %} active {% endif %}"
             href="{{ url_for('user', id=user.id, nav="activities") }}">
-              Actividades
+              Seguimiento
         </a>
       </li>
        <li class="nav-item">
@@ -26,6 +26,13 @@
                   {% if dictionary['nav'] == 'houses' %} active {% endif %}"
             href="{{ url_for('user', id=user.id, nav="houses") }}">
               Casas
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'clients' %} active {% endif %}"
+            href="{{ url_for('user', id=user.id, nav="clients") }}">
+              Clientes
         </a>
       </li>
     </ul>
@@ -72,6 +79,54 @@
     {% elif dictionary["nav"] == "activities" %}
       <p class="text-center"><strong>Actividades registradas</strong></p>
 
+      <div class="alert alert-primary">
+        <nav class="navbar navbar-expand-lg navbar-light">
+          <a class="navbar-brand" href="#"></a>
+          <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item dropdown active">
+                <a class="nav-link dropdown-toggle"
+                    href="#"
+                    id="navbarDropdown"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false">
+                  Filtrar
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item"
+                      href="{{ url_for('user', id=user.id, nav='activities', filter='all') }}">
+                      Todas
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item"
+                      href="{{ url_for('user', id=user.id, nav='activities', filter='today') }}">
+                      Hoy
+                  </a>
+                  <a class="dropdown-item"
+                      href="{{ url_for('user', id=user.id, nav='activities', filter='old') }}">
+                      Vencidas
+                  </a>
+
+                </div>
+              </li>
+            </ul>
+
+          </div>
+        </nav>
+      </div>
+
       <table class="table">
         <tbody>
           {% for activity in pagination.items %}
@@ -87,6 +142,7 @@
                       {{ activity.title}}
                       <small>
                         ({{ activity.account.name }})
+                        ({{ activity.start_date.strftime("%d/%m/%Y") }})
                         ({{ activity.type.name }})
                       </small>
                     </button>
@@ -164,6 +220,44 @@
         </tbody>
       </table>
 
+      {% elif dictionary["nav"] == "clients" %}
+      <p class="text-center"><strong>Clientes registrados</strong></p>
+        <div class="table-responsive-lg">
+        <table class="table table-hover table-sm">
+            <thead>
+                <tr>
+                  <th scope="col">Nombre</th>
+                  <th scope="col">Telefono</th>
+                  <th scope="col">Correo</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Credito</th>
+                </tr>
+            </thead>
+            <tbody>
+          {% for account in pagination.items %}
+            <tr>
+               <td>
+                    <a href="{{ url_for('account', id=account.id) }}">
+                        {{ account.name }}
+                    </a>
+                </td>
+                <td>{{ account.phone }}</td>
+                <td>{{ account.correo }}</td>
+                <td>
+                    {% if account.type %}
+                        {{ account.type.name }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if account.credit %}
+                        {{ account.credit.name }}
+                    {% endif %}
+                </td>
+            </tr>
+          {% endfor %}
+        </table>
+        </div>
+
       {% elif dictionary["nav"] == "houses" %}
       <p class="text-center"><strong>Casas asignadas</strong></p>
         <div class="table-responsive-lg">
@@ -178,7 +272,7 @@
                 </tr>
             </thead>
             <tbody>
-          {% for house in user.sold_houses %}
+          {% for house in pagination.items %}
             <tr>
                <td>
                     <a href="{{ url_for('house_detail', id=house.id) }}">

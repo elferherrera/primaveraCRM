@@ -10,6 +10,54 @@
       <strong>Actividades resgistradas</strong>
     </p>
 
+    <div class="alert alert-primary">
+        <nav class="navbar navbar-expand-lg navbar-light">
+          <a class="navbar-brand" href="#"></a>
+          <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item dropdown active">
+                <a class="nav-link dropdown-toggle"
+                    href="#"
+                    id="navbarDropdown"
+                    role="button"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="false">
+                  Filtrar
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item"
+                      href="{{ url_for('index', filter='all') }}">
+                      Todas
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item"
+                      href="{{ url_for('index', filter='today') }}">
+                      Hoy
+                  </a>
+                  <a class="dropdown-item"
+                      href="{{ url_for('index', filter='old') }}">
+                      Vencidas
+                  </a>
+
+                </div>
+              </li>
+            </ul>
+
+          </div>
+        </nav>
+      </div>
+
     <table class="table">
       <tbody>
         {% for activity in pagination.items %}
@@ -25,6 +73,7 @@
                     {{ activity.title}}
                     <small>
                       ({{ activity.account.name }})
+                      ({{ activity.start_date.strftime("%d/%m/%Y") }})
                       ({{ activity.type.name }})
                     </small>
                   </button>

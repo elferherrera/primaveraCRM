@@ -169,6 +169,9 @@ class Account(db.Model):
     data = db.relationship(
             'Account_data', backref='account',
             lazy='dynamic', cascade="all, delete-orphan")
+    survey = db.relationship(
+            'Account_survey', backref='account',
+            lazy='dynamic', cascade="all, delete-orphan")
     houses = db.relationship(
             'House', backref='account', lazy='dynamic')
 
@@ -216,7 +219,8 @@ class Account_contact_type(db.Model):
     def insert_initial():
         types = [
             'Vivanuncio', 'Vendedor', 'Amigo',
-            'Folleto', 'Lona', 'Segunda mano', 'Pagina web']
+            'Folleto', 'Lona', 'Segunda mano',
+            'Pagina web', 'Fraccionamiento']
 
         for type in types:
             new_type = Account_contact_type.query.filter_by(name=type).first()
@@ -417,6 +421,28 @@ class Account_credit(db.Model):
         db.session.commit()
 
 
+class Account_survey(db.Model):
+    __tablename__ = 'account_survey'
+    id = db.Column(db.Integer, primary_key=True)
+    age = db.Column(db.Integer)
+    status = db.Column(db.Integer)
+    children = db.Column(db.Integer)
+    location = db.Column(db.String(50))
+    info_work = db.Column(db.Integer)
+    info_ad = db.Column(db.Integer)
+    info_purchase = db.Column(db.Integer)
+    info_price = db.Column(db.Integer)
+    info_house = db.Column(db.Integer)
+    info_houses = db.Column(db.Integer)
+    comments = db.Column(db.String(100))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    complex_id = db.Column(db.Integer, db.ForeignKey('houses_complex.id'))
+
+    def __repr__(self):
+        return '<Account survey %r>' % (self.timestamp)
+
 # House classes
 class House(db.Model):
     __tablename__ = 'houses'
@@ -475,6 +501,10 @@ class House_complex(db.Model):
 
     houses = db.relationship(
             'House', backref='complex',
+            lazy='dynamic', cascade="all, delete-orphan")
+
+    survey = db.relationship(
+            'Account_survey', backref='complex',
             lazy='dynamic', cascade="all, delete-orphan")
 
     def __repr__(self):

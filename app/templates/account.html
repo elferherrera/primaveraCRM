@@ -25,6 +25,13 @@
       </li>
       <li class="nav-item">
         <a class="nav-link
+                  {% if dictionary['nav'] == 'survey' %} active {% endif %}"
+            href="{{ url_for('account', id=account.id, nav="survey") }}">
+              Cuestionario
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link
                   {% if dictionary['nav'] == 'comments' %} active {% endif %}"
             href="{{ url_for('account', id=account.id, nav="comments") }}">
               Comentarios
@@ -34,7 +41,7 @@
         <a class="nav-link
                   {% if dictionary['nav'] == 'activities' %} active {% endif %}"
             href="{{ url_for('account', id=account.id, nav="activities") }}">
-              Actividades
+              Seguimiento
         </a>
       </li>
       {% if account.credit.name == "Infonavit" or
@@ -308,6 +315,164 @@
         </table>
       </div>
 
+    {% elif dictionary["nav"] == "survey" %}
+      <p class="text-center">
+          <strong>
+              Resultados de encuesta
+          </strong>
+      </p>
+
+      <div class="alert alert-primary">
+        <nav class="navbar navbar-expand-lg navbar-light">
+          <a class="navbar-brand" href="#"></a>
+          <button class="navbar-toggler"
+                    type="button"
+                    data-toggle="collapse"
+                    data-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+              {% if not account.survey.first() %}
+                  <li class="nav-item active">
+                      <a class="nav-link"
+                          href="{{ url_for('account_survey', id=account.id) }}"
+                          role="button">
+                          Nueva encuesta
+                      </a>
+                  </li>
+              {% endif %}
+              {% if account.survey.first() %}
+                  <li class="nav-item active">
+                      <a class="nav-link"
+                          href="{{ url_for('account_survey_edit', id=account.survey.first().id) }}"
+                          role="button">
+                          Modificar encuesta
+                      </a>
+                  </li>
+
+                  {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+                      <li class="nav-item active">
+                      <a class="nav-link"
+                          href="{{ url_for('account_survey_delete', id=account.survey.first().id) }}"
+                          role="button">
+                          Borrar encuesta
+                      </a>
+                      </li>
+                  {% endif %}
+              {% endif %}
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="align-items-center bg-content rounded box-shadow">
+        <table class="table">
+          <tbody>
+            <tr>
+              {% if account.survey.first().complex %}
+                  <th scope="row">Fraccionamiento</th>
+                  <td>{{ account.survey.first().complex.name }}</td>
+              {% endif %}
+            </tr>
+            <tr>
+              <th scope="row">Edad</th>
+              <td>{{ account.survey.first().age }}</td>
+            </tr>
+            <tr>
+            <tr>
+              <th scope="row">Estado</th>
+              <td>{{
+                   {1: 'Soltero',
+                    2: 'Union',
+                    3: 'Casado',
+                    4: 'Viudo'}[account.survey.first().status]
+                  }}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Hijos</th>
+              <td>{{ account.survey.first().children }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Procedencia</th>
+              <td>{{ account.survey.first().location }}</td>
+            </tr>
+            <tr>
+              <th scope="row">Trabaja cerca de fraccionamiento</th>
+              <td>{{
+                    {1: 'Si',
+                     2: 'No'}[account.survey.first().info_work]
+                  }}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Publicidad</th>
+              <td>{{
+                    {1: 'Facebook',
+                     2: 'Google',
+                     3: 'Vivanuncios',
+                     4: 'Inmuebles24',
+                     5: 'Espectacular',
+                     6: 'Amigo',
+                     7: 'Vendedor',
+                     8: 'Visita',
+                     9: 'Otro'}[account.survey.first().info_ad]
+                  }}
+               </td>
+            </tr>
+            <tr>
+              <th scope="row">Credito</th>
+              <td>{{
+                    {1: 'INFONAVIT',
+                     2: 'FOVISSSTE',
+                     3: 'BANCARIO',
+                     4: 'Contado',
+                     5: 'Otro'}[account.survey.first().info_purchase]
+                  }}
+               </td>
+            </tr>
+            <tr>
+              <th scope="row">Opinion precio</th>
+              <td>{{
+                    {1: 'Excelente',
+                     2: 'Bueno',
+                     3: 'Regular',
+                     4: 'Malo'}[account.survey.first().info_price]
+                  }}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Opinion casa</th>
+              <td>{{
+                    {1: 'Excelente',
+                     2: 'Bueno',
+                     3: 'Regular',
+                     4: 'Malo'}[account.survey.first().info_house]
+                  }}
+            </tr>
+            <tr>
+              <th scope="row">Opinion fraccionamiento</th>
+              <td>
+                  {{
+                    {1: 'Excelente',
+                     2: 'Bueno',
+                     3: 'Regular',
+                     4: 'Malo'}[account.survey.first().info_houses]
+                  }}
+            </tr>
+            <tr>
+              <th scope="row">Comentarios</th>
+              <td>{{ account.survey.first().comments }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
     {% elif dictionary["nav"] == "comments" %}
       <p class="text-center"><strong>Comentarios</strong></p>
       <p class="text-center">
@@ -381,7 +546,7 @@
 
     {% elif dictionary["nav"] == "activities" %}
       <p class="text-center">
-        <strong>Actividades registradas</strong>
+        <strong>Actividades de seguimiento</strong>
         {% if current_user.can(Permission.MODERATE_ACTIVITIES) or
               current_user == account.user %}
         <a href="{{ url_for("account_activity_new", id=account.id) }}">
@@ -403,7 +568,10 @@
                             data-toggle="dropdown"
                             aria-expanded="false">
                       {{ activity.title}}
-                      <small>({{ activity.type.name }})</small>
+                      <small>
+                          ({{ activity.type.name }})
+                          ({{ activity.start_date.strftime("%d/%m/%Y") }})
+                      </small>
                     </button>
 
                     {% if current_user.can(Permission.MODERATE_ACTIVITIES) or

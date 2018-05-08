@@ -8,7 +8,7 @@ from wtforms.validators import (DataRequired, ValidationError, Email,
 from app.models import (User, Role, Account_type,
                         Account_contact_type, Account_address_type,
                         Account_data_type, Account_activity_type,
-                        Account_credit, House_status)
+                        Account_credit, House_status, House_complex)
 
 
 class LoginForm(FlaskForm):
@@ -105,7 +105,7 @@ class CreateAccountForm(FlaskForm):
             'Telefono',
             validators=[
                 Length(0, 30),
-                Regexp('^[\w \(\)_.-]*$', message='Solo letras o numeros.')])
+                Regexp('^[\d]*$', message='Solo numeros.')])
 
     account_type = SelectField('Tipo', coerce=int)
 
@@ -132,6 +132,102 @@ class CreateAccountForm(FlaskForm):
             (ac_type.id, ac_type.name)
             for ac_type in Account_credit.query.order_by(
                                             Account_credit.name).all()]
+
+
+class CreateSurveyForm(FlaskForm):
+    house_complex = SelectField('Fraccionamiento', coerce=int)
+
+    age = StringField(
+            'Edad',
+            validators=[
+                DataRequired(),
+                Length(1, 5),
+                Regexp('^[\d]*$', message='Solo numeros.')])
+
+    status = SelectField('Estado civil', coerce=int)
+
+    children = StringField(
+            'No. Hijos',
+            validators=[
+                DataRequired(),
+                Length(1, 5),
+                Regexp('^[\d]*$', message='Solo numeros.')])
+
+    location = StringField(
+            'Lugar de visita',
+            validators=[
+                DataRequired(),
+                Length(0, 50),
+                Regexp('^[\w _.]*$', message='Solo letras.')])
+
+    info_work = SelectField('Trabaja en ciudad de fraccionamiento', coerce=int)
+    info_ad = SelectField('Como encontro fraccionamiento', coerce=int)
+    info_purchase = SelectField('Forma de compra', coerce=int)
+    info_price = SelectField('Opinion de precio', coerce=int)
+    info_house = SelectField('Opinion de casa', coerce=int)
+    info_houses = SelectField('Opinion de fraccionamiento', coerce=int)
+
+    comments = StringField(
+            'Comentarios',
+            validators=[
+                Length(0, 100),
+                Regexp('^[\w _.]*$', message='Solo letras.')])
+
+    submit = SubmitField('Salvar')
+
+    def __init__(self, *args, **kwargs):
+        super(CreateSurveyForm, self).__init__(*args, **kwargs)
+
+        self.house_complex.choices = [
+            (ac_type.id, ac_type.name)
+            for ac_type in House_complex.query.order_by(
+                                            House_complex.name).all()]
+
+        self.status.choices = [
+            (1, 'Soltero'),
+            (2, 'Union'),
+            (3, 'Casado'),
+            (4, 'Viudo')]
+
+        self.info_work.choices = [
+            (1, 'Si'),
+            (2, 'No')]
+
+        self.info_ad.choices = [
+            (1, 'Facebook'),
+            (2, 'Google'),
+            (3, 'Vivanuncios'),
+            (4, 'Inmuebles24'),
+            (5, 'Espectacular'),
+            (6, 'Amigo'),
+            (7, 'Vendedor'),
+            (8, 'Visita'),
+            (9, 'Otro')]
+
+        self.info_purchase.choices = [
+            (1, 'INFONAVIT'),
+            (2, 'FOVISSSTE'),
+            (3, 'BANCARIO'),
+            (4, 'Contado'),
+            (5, 'Otro')]
+
+        self.info_price.choices = [
+            (1, 'Excelente'),
+            (2, 'Bueno'),
+            (3, 'Regular'),
+            (4, 'Malo')]
+
+        self.info_house.choices = [
+            (1, 'Excelente'),
+            (2, 'Bueno'),
+            (3, 'Regular'),
+            (4, 'Malo')]
+
+        self.info_houses.choices = [
+            (1, 'Excelente'),
+            (2, 'Bueno'),
+            (3, 'Regular'),
+            (4, 'Malo')]
 
 
 class CreateSearchForm(FlaskForm):
@@ -198,7 +294,7 @@ class CreateAddressForm(FlaskForm):
                 validators=[
                     Length(0, 30),
                     Regexp(
-                        '^[\w \(\)_.-]*$',
+                        '^[\d]*$',
                         message='Solo letras o numeros.')])
 
     description = StringField('Comentario', validators=[Length(0, 64)])

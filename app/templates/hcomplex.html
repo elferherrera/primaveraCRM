@@ -22,6 +22,15 @@
               Casas
         </a>
       </li>
+      {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+      <li class="nav-item">
+        <a class="nav-link
+                  {% if dictionary['nav'] == 'survey' %} active {% endif %}"
+            href="{{ url_for('hcomplex_detail', id=hcomplex.id, nav="survey") }}">
+              Cuestionario
+        </a>
+      </li>
+      {% endif %}
     </ul>
 
     {% if dictionary["nav"] == "details" %}
@@ -135,6 +144,10 @@
         </nav>
       </div>
 
+      {% if pagination %}
+        {{ macros.pagination_widget_dict(pagination, 'hcomplex_detail', dictionary) }}
+      {% endif %}
+
       <div class="align-items-center bg-content rounded box-shadow">
         <div class="table-responsive-lg">
         <table class="table">
@@ -217,11 +230,17 @@
         </table>
         </div>
       </div>
+        {% if pagination %}
+            {{ macros.pagination_widget_dict(pagination, 'hcomplex_detail', dictionary) }}
+        {% endif %}
+
+    {% elif dictionary["nav"] == "survey" %}
+      <p class="text-center">
+        <strong>Resultados de encuesta</strong>
+      </p>
 
     {% endif %}
 
-  {% if pagination %}
-    {{ macros.pagination_widget_dict(pagination, 'hcomplex_detail', dictionary) }}
-  {% endif %}
+
 
 {% endblock %}

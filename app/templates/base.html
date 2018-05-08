@@ -81,8 +81,12 @@
                 Mis detalles
             </a>
             {% if current_user.can(Permission.MODERATE_ACTIVITIES) %}
+            <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="{{ url_for("users") }}">
               Usuarios
+            </a>
+            <a class="dropdown-item" href="{{ url_for("account_surveys") }}">
+              Encuestas
             </a>
             {% endif %}
             <div class="dropdown-divider"></div>
