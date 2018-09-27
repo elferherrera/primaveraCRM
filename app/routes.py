@@ -1,6 +1,7 @@
 import string
 import secrets
 import datetime
+import pandas as pd
 from flask import (render_template, flash,
                    redirect, url_for, request)
 from flask_login import (current_user, login_user,
@@ -1112,7 +1113,7 @@ def account_survey(id):
         new_survey.age = form.age.data
         new_survey.status = form.status.data
         new_survey.children = form.children.data
-        new_survey.location = form.location.data
+        new_survey.location = form.location.data.title()
         new_survey.info_work = form.info_work.data
         new_survey.info_ad = form.info_ad.data
         new_survey.info_purchase = form.info_purchase.data
@@ -1151,7 +1152,7 @@ def account_survey_edit(id):
         account_survey.age = form.age.data
         account_survey.status = form.status.data
         account_survey.children = form.children.data
-        account_survey.location = form.location.data
+        account_survey.location = form.location.data.title()
         account_survey.info_work = form.info_work.data
         account_survey.info_ad = form.info_ad.data
         account_survey.info_purchase = form.info_purchase.data
@@ -1210,16 +1211,34 @@ def account_survey_delete(id):
 @login_required
 def account_surveys():
     page = request.args.get('page', 1, type=int)
+    filter = request.args.get('filter', 'all', type=str)
 
-    query = Account_survey.query.join(Account).order_by(Account.name.asc())
+    dictionary = {
+        'filter': filter}
 
-    pagination = query.paginate(
-                    page,
-                    per_page=app.config['PRIMAVERA_POSTS_PER_PAGE'],
-                    error_out=False)
+    query = (Account_survey.
+                    query.
+                    order_by(Account_survey.timestamp.asc()))
+
+    filter_list = (House_complex.
+                    query.
+                    order_by(House_complex.name.asc()).
+                    all())
+
+    if filter != 'all':
+        query = (query.
+                    join(House_complex).
+                    filter(House_complex.name == filter))
+
+    pagination = (query.
+                    paginate(page,
+                             per_page=app.config['PRIMAVERA_POSTS_PER_PAGE'],
+                             error_out=False))
 
     return render_template(
             'surveys.html',
+            filter_list=filter_list,
+            dictionary=dictionary,
             pagination=pagination)
 
 
@@ -1387,14 +1406,85 @@ def hcomplex_detail(id):
                     House.name.asc())
 
     if filter != "all":
-        query = query.join(
-                    House_status).filter(
-                    House_status.name == filter)
+        query = (query.
+                    join(House_status).
+                    filter(House_status.name == filter))
 
     pagination = query.paginate(
                 page,
                 per_page=app.config['PRIMAVERA_POSTS_PER_PAGE'],
                 error_out=False)
+
+    results = {}
+    if nav == "survey":
+        df = pd.read_sql(hcomplex.survey.statement, db.session.bind)
+
+        # Calculating age proportion
+        age_bins = [0, 30, 40, 50, 60, 70, 80]
+        bins = df['age'].groupby(pd.cut(df['age'], age_bins)).count().to_dict()
+        results.setdefault('Edad', bins)
+
+        # Calculating marital status
+        status_bins = {1: 'Soltero',
+                       2: 'Union',
+                       3: 'Casado',
+                       4: 'Viudo'}
+
+        bins = df['status'].map(status_bins).value_counts().to_dict()
+        results.setdefault('Estado', bins)
+
+        # Calculating number of children
+        children_bins = [0, 2, 4, 6]
+        bins = df['children'].groupby(
+                    pd.cut(df['children'], children_bins)).count().to_dict()
+        results.setdefault('Hijos', bins)
+
+        # Calculating location
+        bins = df['location'].value_counts().to_dict()
+        results.setdefault('Ubicacion', bins)
+
+        # Calculating work near place
+        work_bins = {1: 'Si',
+                       2: 'No'}
+        bins = df['info_work'].map(work_bins).value_counts().to_dict()
+        results.setdefault('Trabaja cerca', bins)
+
+        # Calculating ad information
+        ad_bins = {1: 'Facebook',
+                     2: 'Google',
+                     3: 'Vivanuncios',
+                     4: 'Inmuebles24',
+                     5: 'Espectacular',
+                     6: 'Amigo',
+                     7: 'Vendedor',
+                     8: 'Visita',
+                     9: 'Otro'}
+
+        bins = df['info_ad'].map(ad_bins).value_counts().to_dict()
+        results.setdefault('Informacion publicidad', bins)
+
+        # Calculating ad information
+        purchase_bins = {1: 'INFONAVIT',
+                     2: 'FOVISSSTE',
+                     3: 'BANCARIO',
+                     4: 'Contado',
+                     5: 'Otro'}
+
+        bins = df['info_purchase'].map(purchase_bins).value_counts().to_dict()
+        results.setdefault('Informacion compra', bins)
+
+        # Calculating opinion information
+        opinion_bins = {1: 'Excelente',
+                     2: 'Bueno',
+                     3: 'Regular',
+                     4: 'Malo'}
+
+        opinions = {'info_price': 'Informacion precio',
+                    'info_house': 'Informacion casa',
+                    'info_houses': 'Informacion fraccionamiento'}
+        for op in opinions:
+            bins = df[op].map(opinion_bins).value_counts().to_dict()
+            results.setdefault(opinions[op], bins)
 
     return render_template(
                 'hcomplex.html',
@@ -1402,7 +1492,8 @@ def hcomplex_detail(id):
                 form=form,
                 pagination=pagination,
                 filter_list=filter_list,
-                dictionary=dictionary)
+                dictionary=dictionary,
+                results=results)
 
 
 @app.route('/hcomplex_print/<int:id>')
@@ -1448,6 +1539,7 @@ def house_new(id):
         house.address = form.address.data
         house.cuv = form.cuv.data
         house.price = form.price.data
+        house.stage = form.stage.data
 
         house.status = House_status.query.get(form.house_status.data)
 
@@ -1486,6 +1578,7 @@ def house_edit(id):
         house.address = form.address.data
         house.cuv = form.cuv.data
         house.price = form.price.data
+        house.stage = form.stage.data
 
         house.status = House_status.query.get(form.house_status.data)
 
@@ -1498,6 +1591,7 @@ def house_edit(id):
     form.address.data = house.address
     form.cuv.data = house.cuv
     form.price.data = house.price
+    form.stage.data = house.stage
 
     form.house_status.data = house.status.id
 

@@ -408,7 +408,7 @@ class Account_credit(db.Model):
     @staticmethod
     def insert_initial():
         types = ['Infonavit', 'Fovissste', 'Bancario',
-            'Contado', 'Cancelado', 'Desconocido']
+            'Contado', 'Cancelado', 'Desconocido', 'Issfam', 'Cofinavit']
 
         for type in types:
             new_type = Account_credit.query.filter_by(name=type).first()
@@ -451,6 +451,7 @@ class House(db.Model):
     address = db.Column(db.String(64))
     cuv = db.Column(db.String(20))
     price = db.Column(db.Float())
+    stage = db.Column(db.Integer)
 
     complex_id = db.Column(db.Integer, db.ForeignKey('houses_complex.id'))
     status_id = db.Column(db.Integer, db.ForeignKey('houses_status.id'))

@@ -425,6 +425,12 @@ class CreateHouseForm(FlaskForm):
                 DataRequired(), Length(1, 64),
                 Regexp('^[\w -_.]*$', message='Solo letras.')])
 
+    stage = StringField(
+            'Etapa',
+            validators=[
+                Length(0, 2),
+                Regexp('^[\d]*$', message='Solo Numeros.')])
+
     address = StringField(
             'Direccion',
             validators=[

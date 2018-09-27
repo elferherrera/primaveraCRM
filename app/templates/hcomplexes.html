@@ -41,9 +41,9 @@
       {{ macros.pagination_widget_dict(pagination, 'hcomplexes') }}
     {% endif %}
 
-    <div class="align-items-center bg-content rounded box-shadow">
+
       <div class="table-responsive-lg">
-      <table class="table table-striped">
+      <table class="table table-hover table-sm">
         <thead>
           <tr>
             <th scope="col">Nombre</th>
@@ -131,7 +131,7 @@
         </tbody>
       </table>
       </div>
-    </div>
+
 
     {% if pagination %}
       {{ macros.pagination_widget_dict(pagination, 'hcomplexes') }}

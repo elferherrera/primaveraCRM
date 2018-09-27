@@ -127,37 +127,34 @@
         </nav>
       </div>
 
-      <table class="table">
+      <div class="table-responsive-lg">
+        <table class="table table-hover table-sm">
+        <thead>
+            <tr>
+              <th scope="col">Titulo</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Cuenta</th>
+              <th scope="col">Descripcion</th>
+              <th scope="col">Fecha de inicio</th>
+              <th scope="col">Fecha de terminacion</th>
+            </tr>
+        </thead>
         <tbody>
           {% for activity in pagination.items %}
             <tr>
               <td>
 
-                <div class="title-area">
+
                   <div class="btn-group dropup">
                     <button type="button"
                             class="btn btn-secondary dropdown-toggle"
                             data-toggle="dropdown"
                             aria-expanded="false">
+
                       {{ activity.title}}
-                      <small>
-                        ({{ activity.account.name }})
-                        ({{ activity.start_date.strftime("%d/%m/%Y") }})
-                        ({{ activity.type.name }})
-                      </small>
                     </button>
 
                     <ul class="dropdown-menu ul-drp" role="menu">
-                      <li class="li-drp">
-                        <a class="dropdown-item"
-                            data-toggle="collapse"
-                            href="#c-{{ activity.id }}"
-                            role="button"
-                            aria-expanded="false"
-                            aria-controls="collapseExample">
-                            Detalles
-                        </a>
-                      </li>
                       <li class="li-drp">
                         <a class="dropdown-item"
                             href="{{ url_for("account_activity", id=activity.id) }} ">
@@ -166,59 +163,31 @@
                       </li>
                     </ul>
                   </div>
-                  </br>
 
-                  <div class="card">
-                    <div class="card-body">
-                      {{ activity.body }}
-                    </div>
-                  </div>
-                </div>
+                </td>
 
-                <div class="table-area">
-                  <div class="collapse" id="c-{{ activity.id }}">
-                      <strong>
-                        Responsable: {{ activity.responsable.name }}
-                        <small>(
-                        {% if activity.completed %}
-                          Completada
-                        {% else %}
-                            Sin completar
-                        {% endif %}
-                        )
-                        (Creador: {{ activity.creator.name }})
-                        </small>
-                      </strong>
+                <td>
+                    {{ activity.type.name }}
+                </td>
+                <td>
+                    {{ activity.account.name }}
+                </td>
+                <td>
+                    {{ activity.body }}
+                </td>
+                <td>
+                    {{ activity.start_date.strftime("%d/%m/%Y") }}
+                </td>
+                <td>
+                    {{ activity.end_date.strftime("%d/%m/%Y") }}
+                </td>
 
-                      <table class="table table-striped">
-                        <tr>
-                            <td>Creada</td>
-                            <td>
-                                {{ activity.timestamp.strftime("%d/%m/%Y") }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Inicio</td>
-                            <td>
-                                {{ activity.start_date.strftime("%d/%m/%Y") }}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Final</td>
-                            <td>
-                                {{ activity.end_date.strftime("%d/%m/%Y") }}
-                            </td>
-                        </tr>
-                      </table>
-                  </div>
-                </div>
-
-              </td>
             </tr>
 
           {% endfor %}
         </tbody>
       </table>
+      </div>
 
       {% elif dictionary["nav"] == "clients" %}
       <p class="text-center"><strong>Clientes registrados</strong></p>
@@ -255,6 +224,7 @@
                 </td>
             </tr>
           {% endfor %}
+           </tbody>
         </table>
         </div>
 

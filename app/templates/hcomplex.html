@@ -148,9 +148,20 @@
         {{ macros.pagination_widget_dict(pagination, 'hcomplex_detail', dictionary) }}
       {% endif %}
 
-      <div class="align-items-center bg-content rounded box-shadow">
+
         <div class="table-responsive-lg">
-        <table class="table">
+        <table class="table table-hover table-sm">
+         <thead>
+            <tr>
+              <th scope="col">Nombre</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Etapa</th>
+              <th scope="col">Direccion</th>
+              <th scope="col">CUV</th>
+              <th scope="col">Precio</th>
+            </tr>
+         </thead>
+         <tbody>
           {% for house in pagination.items %}
             <tr>
 
@@ -161,7 +172,7 @@
                         class="btn btn-secondary dropdown-toggle"
                         data-toggle="dropdown"
                         aria-expanded="false">
-                 {{ house.name }} <small>({{ house.status.name }})</small>
+                 {{ house.name }}
                 </button>
 
                 <ul class="dropdown-menu ul-drp" role="menu">
@@ -218,18 +229,27 @@
 
              </th>
 
-             <td>
-               {{ house.address }} <small>(CUV: {{ house.cuv }})</small>
+            <td>
+               {{ house.status.name }}
              </td>
-
+             <td>
+               {{ house.stage }}
+             </td>
+            <td>
+               {{ house.address }}
+             </td>
+             <td>
+               {{ house.cuv }}
+             </td>
               <td>
               ${{ "{:,}".format(house.price) }}
              </td>
             </tr>
           {% endfor %}
+         </tbody>
         </table>
         </div>
-      </div>
+
         {% if pagination %}
             {{ macros.pagination_widget_dict(pagination, 'hcomplex_detail', dictionary) }}
         {% endif %}
@@ -238,6 +258,32 @@
       <p class="text-center">
         <strong>Resultados de encuesta</strong>
       </p>
+
+      <div class="table-responsive-lg">
+        <table class="table table-hover table-sm">
+
+            <tbody>
+                {% for item in results %}
+                <tr>
+                  <td>{{ item }}</td>
+                  <td>
+
+                      <table class="table table-sm">
+                          {% for value in results[item] %}
+                          <tr>
+                              <td>{{ value }}</td>
+                              <td>{{ results[item][value] }}</td>
+                          </tr>
+                          {% endfor %}
+                      </table>
+
+                  </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+        </div>
 
     {% endif %}
 
